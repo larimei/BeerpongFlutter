@@ -5,11 +5,78 @@ import 'package:beerpong/features/competitions/data/competition_repository.dart'
 import 'package:beerpong/features/competitions/domain/competition.dart';
 import 'package:beerpong/features/competitions/presentation/competition_details_page.dart';
 import 'package:beerpong/features/competitions/presentation/competitions_page.dart';
+import 'package:beerpong/features/competitions/presentation/widgets/add_competition_form.dart';
+import 'package:beerpong/features/teams/domain/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() {
+  testWidgets('competition form handles empty and initial team selection', (
+    tester,
+  ) async {
+    NewCompetition? submittedCompetition;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AddCompetitionForm(
+            teams: const [],
+            onSubmit: (competition) => submittedCompetition = competition,
+            onCancel: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text('No teams available. You can add teams later.'),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byType(TextFormField), 'Empty Cup');
+    await _tapAdd(tester);
+    expect(submittedCompetition?.teamIds, isEmpty);
+
+    submittedCompetition = null;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AddCompetitionForm(
+            teams: const [
+              Team(
+                id: 'team-1',
+                name: 'Red Rockets',
+                playerIds: [],
+                color: Colors.red,
+              ),
+              Team(
+                id: 'team-2',
+                name: 'Blue Birds',
+                playerIds: [],
+                color: Colors.blue,
+              ),
+            ],
+            onSubmit: (competition) => submittedCompetition = competition,
+            onCancel: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Red Rockets'), findsOneWidget);
+    expect(find.text('Blue Birds'), findsOneWidget);
+    expect(
+      tester
+          .widget<CircleAvatar>(find.byType(CircleAvatar).first)
+          .backgroundColor,
+      Colors.red,
+    );
+    await tester.tap(find.text('Red Rockets'));
+    await tester.enterText(find.byType(TextFormField), 'Selected Cup');
+    await _tapAdd(tester);
+    expect(submittedCompetition?.teamIds, ['team-1']);
+  });
+
   testWidgets('shows the empty state and competition form defaults', (
     tester,
   ) async {
@@ -39,7 +106,7 @@ void main() {
     final decoration = colorPreview.decoration as BoxDecoration;
     expect(decoration.color, const Color(0xFFFFD95A));
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await _tapAdd(tester);
     await tester.pump();
     expect(find.text('Enter a competition name'), findsOneWidget);
   });
@@ -54,11 +121,11 @@ void main() {
     await tester.tap(find.byTooltip('Add'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'First Cup');
-    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await _tapAdd(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsOneWidget);
-    expect(find.text('Knockout - 0 teams'), findsNothing);
+    expect(find.text('Knockout - 0 teams'), findsOneWidget);
     final card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
@@ -80,12 +147,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Round robin').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await _tapAdd(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsNWidgets(2));
-    expect(find.text('Knockout - 0 teams'), findsNothing);
-    expect(find.text('Round robin - 0 teams'), findsNothing);
+    expect(find.text('Knockout - 0 teams'), findsOneWidget);
+    expect(find.text('Round robin - 0 teams'), findsOneWidget);
   });
 
   testWidgets('empty state and add form remain usable on mobile web', (
@@ -133,6 +200,50 @@ void main() {
     expect(find.byKey(const Key('competition-color-preview')), findsOneWidget);
     expect(find.text('Won games'), findsNothing);
     expect(find.text('Lost games'), findsNothing);
+  });
+
+  testWidgets('manages memberships with cancellation and live team counts', (
+    tester,
+  ) async {
+    final controller = _controllerWithCompetitions();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
+    );
+
+    expect(find.text('Knockout - 2 teams'), findsOneWidget);
+    await tester.tap(find.text('Summer Cup'));
+    await tester.pumpAndSettle();
+    expect(find.text('Red Rockets'), findsOneWidget);
+    expect(find.text('Blue Birds'), findsOneWidget);
+
+    await tester.tap(find.text('Manage teams'));
+    await tester.pumpAndSettle();
+    final initiallySelected = tester.widget<CheckboxListTile>(
+      find.widgetWithText(CheckboxListTile, 'Red Rockets'),
+    );
+    expect(initiallySelected.value, isTrue);
+    await tester.tap(find.text('Red Rockets').last);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(controller.competitions.first.teamIds, ['team-1', 'team-2']);
+
+    await tester.tap(find.text('Manage teams'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Red Rockets').last);
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(controller.competitions.first.teamIds, ['team-2']);
+    expect(find.text('Red Rockets'), findsNothing);
+    expect(find.text('Blue Birds'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Knockout - 1 team'), findsOneWidget);
   });
 
   testWidgets('validates, cancels, and saves competition edits', (
@@ -242,6 +353,13 @@ void main() {
   });
 }
 
+Future<void> _tapAdd(WidgetTester tester) async {
+  final addButton = find.widgetWithText(FilledButton, 'Add');
+  await tester.ensureVisible(addButton);
+  await tester.tap(addButton);
+  await tester.pump();
+}
+
 CompetitionsController _controllerWithCompetitions() {
   return CompetitionsController(
     InMemoryCompetitionRepository(const [
@@ -261,3 +379,8 @@ CompetitionsController _controllerWithCompetitions() {
     ]),
   );
 }
+
+const _teams = [
+  Team(id: 'team-1', name: 'Red Rockets', playerIds: [], color: Colors.red),
+  Team(id: 'team-2', name: 'Blue Birds', playerIds: [], color: Colors.blue),
+];

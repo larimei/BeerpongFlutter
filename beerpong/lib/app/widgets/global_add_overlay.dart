@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/competitions/presentation/widgets/add_competition_form.dart';
 import '../../features/players/domain/player.dart';
 import '../../features/teams/presentation/widgets/add_team_form.dart';
+import '../../features/teams/domain/team.dart';
 import 'entity_add_form.dart';
 
 enum GlobalAddTarget { player, team, competition }
@@ -11,11 +12,13 @@ class GlobalAddOverlay extends StatelessWidget {
   const GlobalAddOverlay({
     required this.target,
     this.players = const [],
+    this.teams = const [],
     super.key,
   });
 
   final GlobalAddTarget target;
   final List<Player> players;
+  final List<Team> teams;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +40,7 @@ class GlobalAddOverlay extends StatelessWidget {
         onCancel: () => Navigator.pop(context),
       ),
       GlobalAddTarget.competition => AddCompetitionForm(
+        teams: teams,
         onSubmit: (competition) => Navigator.pop(context, competition),
         onCancel: () => Navigator.pop(context),
       ),

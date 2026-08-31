@@ -29,6 +29,18 @@ void main() {
       expect(controller.competitions.single.color, Colors.amber);
     });
 
+    test('creates a competition with deduplicated initial teams', () {
+      final added = controller.addCompetition(
+        name: 'Summer Cup',
+        mode: TournamentMode.knockout,
+        color: Colors.amber,
+        teamIds: const ['team-1', 'team-2', 'team-1'],
+      );
+
+      expect(added, isTrue);
+      expect(controller.competitions.single.teamIds, ['team-1', 'team-2']);
+    });
+
     test('rejects a whitespace-only competition name', () {
       final added = controller.addCompetition(
         name: '   ',
@@ -93,6 +105,45 @@ void main() {
         'team-1',
         'team-2',
       ]);
+    });
+
+    test('changes team membership without changing competition metadata', () {
+      const competition = Competition(
+        id: 'competition-1',
+        name: 'Original Cup',
+        mode: TournamentMode.roundRobin,
+        color: Colors.blue,
+        teamIds: ['team-1'],
+      );
+      controller.dispose();
+      controller = CompetitionsController(
+        InMemoryCompetitionRepository([competition]),
+      );
+
+      final updated = controller.updateCompetitionTeams(
+        id: competition.id,
+        teamIds: const ['team-2', 'team-3', 'team-2'],
+      );
+
+      expect(updated, isTrue);
+      expect(controller.competitionById(competition.id), isNotNull);
+      expect(controller.competitionById(competition.id)?.name, 'Original Cup');
+      expect(
+        controller.competitionById(competition.id)?.mode,
+        TournamentMode.roundRobin,
+      );
+      expect(controller.competitionById(competition.id)?.color, Colors.blue);
+      expect(controller.competitionById(competition.id)?.teamIds, [
+        'team-2',
+        'team-3',
+      ]);
+      expect(
+        controller.updateCompetitionTeams(
+          id: 'missing',
+          teamIds: const ['team-1'],
+        ),
+        isFalse,
+      );
     });
 
     test('rejects invalid edits and handles a missing competition', () {

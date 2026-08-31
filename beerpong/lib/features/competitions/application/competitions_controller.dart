@@ -19,6 +19,7 @@ class CompetitionsController extends ChangeNotifier {
     required String name,
     required TournamentMode mode,
     required Color color,
+    List<String> teamIds = const [],
   }) {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) return false;
@@ -29,7 +30,21 @@ class CompetitionsController extends ChangeNotifier {
         name: trimmedName,
         mode: mode,
         color: color,
+        teamIds: List.unmodifiable(teamIds.toSet()),
       ),
+    );
+    _refresh();
+    return true;
+  }
+
+  bool updateCompetitionTeams({
+    required String id,
+    required List<String> teamIds,
+  }) {
+    final currentCompetition = _repository.getById(id);
+    if (currentCompetition == null) return false;
+    _repository.update(
+      currentCompetition.copyWith(teamIds: List.unmodifiable(teamIds.toSet())),
     );
     _refresh();
     return true;

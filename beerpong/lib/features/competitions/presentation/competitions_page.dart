@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_card.dart';
+import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
 import 'competition_details_page.dart';
 
 class CompetitionsPage extends StatelessWidget {
-  const CompetitionsPage({required this.controller, super.key});
+  const CompetitionsPage({
+    required this.controller,
+    this.teams = const [],
+    super.key,
+  });
 
   final CompetitionsController controller;
+  final List<Team> teams;
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +43,18 @@ class CompetitionsPage extends StatelessWidget {
                 name: competition.name,
                 color: competition.color,
                 icon: Icons.emoji_events_outlined,
+                additionalContent: Text(
+                  '${competition.mode.label} - '
+                  '${competition.teamIds.length} '
+                  '${competition.teamIds.length == 1 ? 'team' : 'teams'}',
+                ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
                     builder: (context) => CompetitionDetailsPage(
                       competitionId: competition.id,
                       controller: controller,
+                      teams: teams,
                     ),
                   ),
                 ),

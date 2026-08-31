@@ -60,8 +60,11 @@ class _AppShellState extends State<AppShell> {
     final target = GlobalAddTarget.values[_selectedIndex];
     final result = await showDialog<Object>(
       context: context,
-      builder: (context) =>
-          GlobalAddOverlay(target: target, players: _playersController.players),
+      builder: (context) => GlobalAddOverlay(
+        target: target,
+        players: _playersController.players,
+        teams: _teamsController.teams,
+      ),
     );
     switch (result) {
       case NewEntity(:final name, :final color):
@@ -72,11 +75,17 @@ class _AppShellState extends State<AppShell> {
           playerIds: playerIds,
           color: color,
         );
-      case NewCompetition(:final name, :final mode, :final color):
+      case NewCompetition(
+        :final name,
+        :final mode,
+        :final color,
+        :final teamIds,
+      ):
         _competitionsController.addCompetition(
           name: name,
           mode: mode,
           color: color,
+          teamIds: teamIds,
         );
       case null:
       case _:
@@ -97,7 +106,10 @@ class _AppShellState extends State<AppShell> {
               controller: _teamsController,
               playersController: _playersController,
             ),
-            CompetitionsPage(controller: _competitionsController),
+            CompetitionsPage(
+              controller: _competitionsController,
+              teams: _teamsController.teams,
+            ),
           ],
         );
 

@@ -2,18 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
+import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
 import '../domain/competition.dart';
+import 'widgets/team_selection.dart';
 
 class CompetitionDetailsPage extends StatelessWidget {
   const CompetitionDetailsPage({
     required this.competitionId,
     required this.controller,
+    this.teams = const [],
     super.key,
   });
 
   final String competitionId;
   final CompetitionsController controller;
+  final List<Team> teams;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +55,12 @@ class CompetitionDetailsPage extends StatelessWidget {
                     iconKey: const Key('competition-details-icon'),
                     additionalContent: _CompetitionInformation(
                       competition: competition,
+                      assignedTeams: teams
+                          .where(
+                            (team) => competition.teamIds.contains(team.id),
+                          )
+                          .toList(),
+                      onManageTeams: () => _manageTeams(context, competition),
                     ),
                     onEdit: () => _editCompetition(context, competition),
                     onDelete: () => _deleteCompetition(context, competition),
@@ -58,6 +68,45 @@ class CompetitionDetailsPage extends StatelessWidget {
                 ),
         );
       },
+    );
+  }
+
+  Future<void> _manageTeams(
+    BuildContext context,
+    Competition competition,
+  ) async {
+    var selectedTeamIds = competition.teamIds.toSet();
+    final savedTeamIds = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Manage teams'),
+          content: SizedBox(
+            width: 420,
+            child: TeamSelection(
+              teams: teams,
+              selectedTeamIds: selectedTeamIds,
+              onChanged: (teamIds) =>
+                  setDialogState(() => selectedTeamIds = teamIds),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, selectedTeamIds.toList()),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (savedTeamIds == null) return;
+    controller.updateCompetitionTeams(
+      id: competition.id,
+      teamIds: savedTeamIds,
     );
   }
 
@@ -138,9 +187,15 @@ class CompetitionDetailsPage extends StatelessWidget {
 }
 
 class _CompetitionInformation extends StatelessWidget {
-  const _CompetitionInformation({required this.competition});
+  const _CompetitionInformation({
+    required this.competition,
+    required this.assignedTeams,
+    required this.onManageTeams,
+  });
 
   final Competition competition;
+  final List<Team> assignedTeams;
+  final VoidCallback onManageTeams;
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +210,26 @@ class _CompetitionInformation extends StatelessWidget {
         _InformationRow(
           label: 'Teams',
           value: Text('${competition.teamIds.length}'),
+        ),
+        const SizedBox(height: 8),
+        if (assignedTeams.isEmpty)
+          const Text('No teams assigned')
+        else
+          ...assignedTeams.map(
+            (team) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              leading: CircleAvatar(radius: 12, backgroundColor: team.color),
+              title: Text(team.name),
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: onManageTeams,
+            icon: const Icon(Icons.groups_outlined),
+            label: const Text('Manage teams'),
+          ),
         ),
         const SizedBox(height: 16),
         _InformationRow(
