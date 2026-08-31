@@ -39,10 +39,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Add'));
     await tester.pumpAndSettle();
-    expect(find.text('Add Competition'), findsOneWidget);
-    expect(
-      find.text('This form will be implemented in a future step.'),
-      findsOneWidget,
-    );
+    expect(find.text('Add competition'), findsOneWidget);
+    expect(find.text('Tournament mode'), findsOneWidget);
   });
 }

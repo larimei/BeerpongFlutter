@@ -5,7 +5,7 @@ class EntityCard extends StatelessWidget {
     required this.name,
     required this.color,
     required this.icon,
-    required this.onTap,
+    this.onTap,
     this.additionalContent,
     super.key,
   });
@@ -13,7 +13,7 @@ class EntityCard extends StatelessWidget {
   final String name;
   final Color color;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget? additionalContent;
 
   @override

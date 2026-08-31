@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../features/competitions/application/competitions_controller.dart';
+import '../features/competitions/data/competition_repository.dart';
 import '../features/competitions/presentation/competitions_page.dart';
+import '../features/competitions/presentation/widgets/add_competition_form.dart';
 import '../features/players/application/players_controller.dart';
 import '../features/players/data/player_repository.dart';
 import '../features/players/presentation/players_page.dart';
@@ -30,6 +33,7 @@ class _AppShellState extends State<AppShell> {
 
   late final PlayersController _playersController;
   late final TeamsController _teamsController;
+  late final CompetitionsController _competitionsController;
   int _selectedIndex = 0;
 
   @override
@@ -37,12 +41,16 @@ class _AppShellState extends State<AppShell> {
     super.initState();
     _playersController = PlayersController(InMemoryPlayerRepository());
     _teamsController = TeamsController(InMemoryTeamRepository());
+    _competitionsController = CompetitionsController(
+      InMemoryCompetitionRepository(),
+    );
   }
 
   @override
   void dispose() {
     _playersController.dispose();
     _teamsController.dispose();
+    _competitionsController.dispose();
     super.dispose();
   }
 
@@ -64,6 +72,12 @@ class _AppShellState extends State<AppShell> {
           playerIds: playerIds,
           color: color,
         );
+      case NewCompetition(:final name, :final mode, :final color):
+        _competitionsController.addCompetition(
+          name: name,
+          mode: mode,
+          color: color,
+        );
       case null:
       case _:
         break;
@@ -83,7 +97,7 @@ class _AppShellState extends State<AppShell> {
               controller: _teamsController,
               playersController: _playersController,
             ),
-            const CompetitionsPage(),
+            CompetitionsPage(controller: _competitionsController),
           ],
         );
 

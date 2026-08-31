@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../features/competitions/presentation/widgets/add_competition_form.dart';
 import '../../features/players/domain/player.dart';
 import '../../features/teams/presentation/widgets/add_team_form.dart';
 import 'entity_add_form.dart';
-import 'competition_placeholder_form.dart';
 
 enum GlobalAddTarget { player, team, competition }
 
@@ -36,8 +36,9 @@ class GlobalAddOverlay extends StatelessWidget {
         onSubmit: (team) => Navigator.pop(context, team),
         onCancel: () => Navigator.pop(context),
       ),
-      GlobalAddTarget.competition => CompetitionPlaceholderForm(
-        onBack: () => Navigator.pop(context),
+      GlobalAddTarget.competition => AddCompetitionForm(
+        onSubmit: (competition) => Navigator.pop(context, competition),
+        onCancel: () => Navigator.pop(context),
       ),
     };
   }

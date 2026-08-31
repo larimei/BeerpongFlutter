@@ -151,7 +151,10 @@ class _EntityAddFormState extends State<EntityAddForm> {
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
                       key: const Key('selected-color-preview'),
@@ -165,7 +168,6 @@ class _EntityAddFormState extends State<EntityAddForm> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
                     OutlinedButton.icon(
                       onPressed: _pickColor,
                       icon: const Icon(Icons.palette_outlined),
@@ -174,14 +176,15 @@ class _EntityAddFormState extends State<EntityAddForm> {
                   ],
                 ),
                 const SizedBox(height: 28),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     TextButton(
                       onPressed: widget.onCancel,
                       child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton.icon(
                       onPressed: _submit,
                       icon: const Icon(Icons.add),

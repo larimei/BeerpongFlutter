@@ -1,27 +1,82 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/widgets/entity_card.dart';
+import '../application/competitions_controller.dart';
+
 class CompetitionsPage extends StatelessWidget {
-  const CompetitionsPage({super.key});
+  const CompetitionsPage({required this.controller, super.key});
+
+  final CompetitionsController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0FAF9),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF0FAF9),
+        title: const Text('Competitions'),
+      ),
+      body: AnimatedBuilder(
+        animation: controller,
+        builder: (context, child) {
+          final competitions = controller.competitions;
+          if (competitions.isEmpty) return const _EmptyCompetitions();
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 280,
+              mainAxisExtent: 220,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+            ),
+            itemCount: competitions.length,
+            itemBuilder: (context, index) {
+              final competition = competitions[index];
+              return EntityCard(
+                name: competition.name,
+                color: competition.color,
+                icon: Icons.emoji_events_outlined,
+                additionalContent: Text(
+                  '${competition.mode.label} - '
+                  '${competition.teamIds.length} teams',
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _EmptyCompetitions extends StatelessWidget {
+  const _EmptyCompetitions();
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.emoji_events_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Competitions',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 8),
-          const Text('Coming soon'),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.emoji_events_outlined,
+              size: 72,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No competitions yet',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Add your first competition to start a tournament.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
