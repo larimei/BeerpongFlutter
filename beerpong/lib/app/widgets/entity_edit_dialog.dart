@@ -17,6 +17,7 @@ class EntityEditDialog extends StatefulWidget {
     required this.icon,
     this.colorPickerIconKey,
     this.colorPickerWheelKey,
+    this.additionalFields,
     super.key,
   });
 
@@ -26,6 +27,7 @@ class EntityEditDialog extends StatefulWidget {
   final IconData icon;
   final Key? colorPickerIconKey;
   final Key? colorPickerWheelKey;
+  final Widget? additionalFields;
 
   @override
   State<EntityEditDialog> createState() => _EntityEditDialogState();
@@ -123,6 +125,10 @@ class _EntityEditDialogState extends State<EntityEditDialog> {
                   ),
                 ],
               ),
+              if (widget.additionalFields != null) ...[
+                const SizedBox(height: 24),
+                widget.additionalFields!,
+              ],
             ],
           ),
         ),

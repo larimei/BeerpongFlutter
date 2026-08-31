@@ -16,11 +16,13 @@ class EntityAddForm extends StatefulWidget {
     required this.onSubmit,
     required this.onCancel,
     this.initialColor = const Color(0xFFFFD95A),
+    this.initialName = '',
     this.backgroundKey,
     this.avatarKey,
     this.iconKey,
     this.colorPickerIconKey,
     this.colorPickerWheelKey,
+    this.additionalFields,
     super.key,
   });
 
@@ -29,11 +31,13 @@ class EntityAddForm extends StatefulWidget {
   final ValueChanged<NewEntity> onSubmit;
   final VoidCallback onCancel;
   final Color initialColor;
+  final String initialName;
   final Key? backgroundKey;
   final Key? avatarKey;
   final Key? iconKey;
   final Key? colorPickerIconKey;
   final Key? colorPickerWheelKey;
+  final Widget? additionalFields;
 
   @override
   State<EntityAddForm> createState() => _EntityAddFormState();
@@ -41,12 +45,13 @@ class EntityAddForm extends StatefulWidget {
 
 class _EntityAddFormState extends State<EntityAddForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  late final TextEditingController _nameController;
   late Color _selectedColor;
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
     _selectedColor = widget.initialColor;
   }
 
@@ -136,6 +141,10 @@ class _EntityAddFormState extends State<EntityAddForm> {
                       ? 'Enter a ${widget.entityName} name'
                       : null,
                 ),
+                if (widget.additionalFields != null) ...[
+                  const SizedBox(height: 24),
+                  widget.additionalFields!,
+                ],
                 const SizedBox(height: 24),
                 Text(
                   'Card color',

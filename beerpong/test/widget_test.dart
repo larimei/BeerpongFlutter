@@ -26,14 +26,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Add'));
     await tester.pumpAndSettle();
-    expect(find.text('Add Team'), findsOneWidget);
+    expect(find.text('Add team'), findsOneWidget);
     expect(find.text('Add player'), findsNothing);
     expect(
-      find.text('This form will be implemented in a future step.'),
+      find.text('No players available. Add players first.'),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Back'));
+    await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.emoji_events_outlined));
     await tester.pumpAndSettle();

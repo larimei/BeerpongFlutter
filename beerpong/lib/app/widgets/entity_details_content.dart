@@ -15,6 +15,7 @@ class EntityDetailsContent extends StatelessWidget {
     this.surfaceKey,
     this.avatarKey,
     this.iconKey,
+    this.additionalContent,
     super.key,
   });
 
@@ -29,6 +30,7 @@ class EntityDetailsContent extends StatelessWidget {
   final Key? surfaceKey;
   final Key? avatarKey;
   final Key? iconKey;
+  final Widget? additionalContent;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,10 @@ class EntityDetailsContent extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
+                        if (additionalContent != null) ...[
+                          const SizedBox(height: 24),
+                          additionalContent!,
+                        ],
                         const SizedBox(height: 36),
                         Text(
                           'Statistics',

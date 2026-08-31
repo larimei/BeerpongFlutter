@@ -5,8 +5,11 @@ import '../features/players/application/players_controller.dart';
 import '../features/players/data/player_repository.dart';
 import '../features/players/presentation/players_page.dart';
 import '../features/teams/presentation/teams_page.dart';
-import 'widgets/global_add_overlay.dart';
+import '../features/teams/application/teams_controller.dart';
+import '../features/teams/data/team_repository.dart';
+import '../features/teams/presentation/widgets/add_team_form.dart';
 import 'widgets/entity_add_form.dart';
+import 'widgets/global_add_overlay.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -26,17 +29,20 @@ class _AppShellState extends State<AppShell> {
   ];
 
   late final PlayersController _playersController;
+  late final TeamsController _teamsController;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _playersController = PlayersController(InMemoryPlayerRepository());
+    _teamsController = TeamsController(InMemoryTeamRepository());
   }
 
   @override
   void dispose() {
     _playersController.dispose();
+    _teamsController.dispose();
     super.dispose();
   }
 
@@ -44,12 +50,24 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _showGlobalAddOverlay() async {
     final target = GlobalAddTarget.values[_selectedIndex];
-    final newPlayer = await showDialog<NewEntity>(
+    final result = await showDialog<Object>(
       context: context,
-      builder: (context) => GlobalAddOverlay(target: target),
+      builder: (context) =>
+          GlobalAddOverlay(target: target, players: _playersController.players),
     );
-    if (newPlayer == null) return;
-    _playersController.addPlayer(name: newPlayer.name, color: newPlayer.color);
+    switch (result) {
+      case NewEntity(:final name, :final color):
+        _playersController.addPlayer(name: name, color: color);
+      case NewTeam(:final name, :final playerIds, :final color):
+        _teamsController.addTeam(
+          name: name,
+          playerIds: playerIds,
+          color: color,
+        );
+      case null:
+      case _:
+        break;
+    }
   }
 
   @override
@@ -61,7 +79,10 @@ class _AppShellState extends State<AppShell> {
           index: _selectedIndex,
           children: [
             PlayersPage(controller: _playersController),
-            const TeamsPage(),
+            TeamsPage(
+              controller: _teamsController,
+              playersController: _playersController,
+            ),
             const CompetitionsPage(),
           ],
         );

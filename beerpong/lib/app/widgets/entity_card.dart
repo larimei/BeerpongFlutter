@@ -6,6 +6,7 @@ class EntityCard extends StatelessWidget {
     required this.color,
     required this.icon,
     required this.onTap,
+    this.additionalContent,
     super.key,
   });
 
@@ -13,6 +14,7 @@ class EntityCard extends StatelessWidget {
   final Color color;
   final IconData icon;
   final VoidCallback onTap;
+  final Widget? additionalContent;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +44,10 @@ class EntityCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
+                if (additionalContent != null) ...[
+                  const SizedBox(height: 12),
+                  additionalContent!,
+                ],
               ],
             ),
           ),
