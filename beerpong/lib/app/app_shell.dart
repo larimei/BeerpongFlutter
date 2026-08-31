@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../features/competitions/presentation/competitions_page.dart';
+import '../features/players/application/players_controller.dart';
+import '../features/players/data/player_repository.dart';
 import '../features/players/presentation/players_page.dart';
 import '../features/teams/presentation/teams_page.dart';
+import 'widgets/global_add_overlay.dart';
+import 'widgets/entity_add_form.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -12,7 +16,6 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  static const _pages = [PlayersPage(), TeamsPage(), CompetitionsPage()];
   static const _destinations = [
     NavigationDestination(icon: Icon(Icons.person_outline), label: 'Players'),
     NavigationDestination(icon: Icon(Icons.groups_outlined), label: 'Teams'),
@@ -22,16 +25,46 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
+  late final PlayersController _playersController;
   int _selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _playersController = PlayersController(InMemoryPlayerRepository());
+  }
+
+  @override
+  void dispose() {
+    _playersController.dispose();
+    super.dispose();
+  }
+
   void _selectPage(int index) => setState(() => _selectedIndex = index);
+
+  Future<void> _showGlobalAddOverlay() async {
+    final target = GlobalAddTarget.values[_selectedIndex];
+    final newPlayer = await showDialog<NewEntity>(
+      context: context,
+      builder: (context) => GlobalAddOverlay(target: target),
+    );
+    if (newPlayer == null) return;
+    _playersController.addPlayer(name: newPlayer.name, color: newPlayer.color);
+  }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useNavigationRail = constraints.maxWidth >= 720;
-        final content = IndexedStack(index: _selectedIndex, children: _pages);
+        final content = IndexedStack(
+          index: _selectedIndex,
+          children: [
+            PlayersPage(controller: _playersController),
+            const TeamsPage(),
+            const CompetitionsPage(),
+          ],
+        );
 
         return Scaffold(
           body: SafeArea(
@@ -64,6 +97,11 @@ class _AppShellState extends State<AppShell> {
                   onDestinationSelected: _selectPage,
                   destinations: _destinations,
                 ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _showGlobalAddOverlay,
+            tooltip: 'Add',
+            child: const Icon(Icons.add),
+          ),
         );
       },
     );

@@ -16,4 +16,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Competitions'), findsWidgets);
   });
+
+  testWidgets('global add button opens the current page overlay', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BeerpongApp());
+
+    await tester.tap(find.byIcon(Icons.groups_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add Team'), findsOneWidget);
+    expect(find.text('Add player'), findsNothing);
+    expect(
+      find.text('This form will be implemented in a future step.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Back'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.emoji_events_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add Competition'), findsOneWidget);
+    expect(
+      find.text('This form will be implemented in a future step.'),
+      findsOneWidget,
+    );
+  });
 }
