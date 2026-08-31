@@ -44,7 +44,7 @@ void main() {
     expect(find.text('Enter a competition name'), findsOneWidget);
   });
 
-  testWidgets('creates competitions and immediately renders mode summaries', (
+  testWidgets('creates competitions as two-column square entity cards', (
     tester,
   ) async {
     await tester.pumpWidget(const BeerpongApp());
@@ -58,13 +58,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsOneWidget);
-    expect(find.text('Knockout - 0 teams'), findsOneWidget);
+    expect(find.text('Knockout - 0 teams'), findsNothing);
     final card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
     expect(card.color, const Color(0xFFFFD95A));
     expect(card.icon, Icons.emoji_events_outlined);
     expect(card.onTap, isNotNull);
+    final cardSize = tester.getSize(find.byType(EntityCard));
+    expect(cardSize.width, cardSize.height);
+    final grid = tester.widget<GridView>(find.byType(GridView));
+    final delegate =
+        grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    expect(delegate.crossAxisCount, 2);
+    expect(delegate.childAspectRatio, 1);
 
     await tester.tap(find.byTooltip('Add'));
     await tester.pumpAndSettle();
@@ -77,8 +84,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsNWidgets(2));
-    expect(find.text('Knockout - 0 teams'), findsOneWidget);
-    expect(find.text('Round robin - 0 teams'), findsOneWidget);
+    expect(find.text('Knockout - 0 teams'), findsNothing);
+    expect(find.text('Round robin - 0 teams'), findsNothing);
   });
 
   testWidgets('empty state and add form remain usable on mobile web', (
@@ -181,7 +188,6 @@ void main() {
       find.widgetWithText(EntityCard, 'Updated Cup'),
     );
     expect(updatedCard.color, Colors.blue);
-    expect(find.text('Round robin - 2 teams'), findsOneWidget);
   });
 
   testWidgets('cancels deletion or deletes only the selected competition', (

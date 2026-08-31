@@ -11,7 +11,9 @@ class BeerpongApp extends StatelessWidget {
       title: 'Beer Pong Tournaments',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 103, 146, 240),
+        ),
         useMaterial3: true,
       ),
       home: const AppShell(),

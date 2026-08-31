@@ -24,9 +24,9 @@ class CompetitionsPage extends StatelessWidget {
           if (competitions.isEmpty) return const _EmptyCompetitions();
           return GridView.builder(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 280,
-              mainAxisExtent: 220,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1,
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
             ),
@@ -37,10 +37,6 @@ class CompetitionsPage extends StatelessWidget {
                 name: competition.name,
                 color: competition.color,
                 icon: Icons.emoji_events_outlined,
-                additionalContent: Text(
-                  '${competition.mode.label} - '
-                  '${competition.teamIds.length} teams',
-                ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
