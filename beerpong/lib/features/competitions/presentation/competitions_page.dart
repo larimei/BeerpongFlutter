@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_card.dart';
 import '../application/competitions_controller.dart';
+import 'competition_details_page.dart';
 
 class CompetitionsPage extends StatelessWidget {
   const CompetitionsPage({required this.controller, super.key});
@@ -39,6 +40,15 @@ class CompetitionsPage extends StatelessWidget {
                 additionalContent: Text(
                   '${competition.mode.label} - '
                   '${competition.teamIds.length} teams',
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => CompetitionDetailsPage(
+                      competitionId: competition.id,
+                      controller: controller,
+                    ),
+                  ),
                 ),
               );
             },

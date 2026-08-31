@@ -12,6 +12,7 @@ class EntityDetailsContent extends StatelessWidget {
     required this.entityName,
     required this.onEdit,
     required this.onDelete,
+    this.showStatistics = true,
     this.surfaceKey,
     this.avatarKey,
     this.iconKey,
@@ -27,6 +28,7 @@ class EntityDetailsContent extends StatelessWidget {
   final String entityName;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showStatistics;
   final Key? surfaceKey;
   final Key? avatarKey;
   final Key? iconKey;
@@ -67,25 +69,27 @@ class EntityDetailsContent extends StatelessWidget {
                           const SizedBox(height: 24),
                           additionalContent!,
                         ],
-                        const SizedBox(height: 36),
-                        Text(
-                          'Statistics',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 20),
-                        StatisticBar(
-                          label: 'Won games',
-                          value: won,
-                          fraction: wonFraction,
-                          color: Colors.amber.shade600,
-                        ),
-                        const SizedBox(height: 20),
-                        StatisticBar(
-                          label: 'Lost games',
-                          value: lost,
-                          fraction: lostFraction,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                        if (showStatistics) ...[
+                          const SizedBox(height: 36),
+                          Text(
+                            'Statistics',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 20),
+                          StatisticBar(
+                            label: 'Won games',
+                            value: won,
+                            fraction: wonFraction,
+                            color: Colors.amber.shade600,
+                          ),
+                          const SizedBox(height: 20),
+                          StatisticBar(
+                            label: 'Lost games',
+                            value: lost,
+                            fraction: lostFraction,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ],
                         const SizedBox(height: 32),
                         FilledButton.icon(
                           onPressed: onEdit,

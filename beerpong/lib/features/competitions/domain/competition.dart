@@ -24,4 +24,19 @@ class Competition {
   final TournamentMode mode;
   final Color color;
   final List<String> teamIds;
+
+  Competition copyWith({
+    String? name,
+    TournamentMode? mode,
+    Color? color,
+    List<String>? teamIds,
+  }) {
+    return Competition(
+      id: id,
+      name: name ?? this.name,
+      mode: mode ?? this.mode,
+      color: color ?? this.color,
+      teamIds: teamIds ?? this.teamIds,
+    );
+  }
 }

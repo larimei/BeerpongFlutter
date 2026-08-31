@@ -13,6 +13,8 @@ class CompetitionsController extends ChangeNotifier {
 
   List<Competition> get competitions => List.unmodifiable(_competitions);
 
+  Competition? competitionById(String id) => _repository.getById(id);
+
   bool addCompetition({
     required String name,
     required TournamentMode mode,
@@ -29,8 +31,33 @@ class CompetitionsController extends ChangeNotifier {
         color: color,
       ),
     );
+    _refresh();
+    return true;
+  }
+
+  bool updateCompetition({
+    required String id,
+    required String name,
+    required TournamentMode mode,
+    required Color color,
+  }) {
+    final trimmedName = name.trim();
+    final currentCompetition = _repository.getById(id);
+    if (trimmedName.isEmpty || currentCompetition == null) return false;
+    _repository.update(
+      currentCompetition.copyWith(name: trimmedName, mode: mode, color: color),
+    );
+    _refresh();
+    return true;
+  }
+
+  void deleteCompetition(String id) {
+    _repository.delete(id);
+    _refresh();
+  }
+
+  void _refresh() {
     _competitions = _repository.getAll();
     notifyListeners();
-    return true;
   }
 }
