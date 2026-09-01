@@ -65,13 +65,9 @@ void main() {
 
     expect(find.text('Red Rockets'), findsOneWidget);
     expect(find.text('Blue Birds'), findsOneWidget);
-    expect(
-      tester
-          .widget<CircleAvatar>(find.byType(CircleAvatar).first)
-          .backgroundColor,
-      Colors.red,
-    );
-    await tester.tap(find.text('Red Rockets'));
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byTooltip('Add Red Rockets'), findsOneWidget);
+    await tester.tap(find.byTooltip('Add Red Rockets'));
     await tester.enterText(find.byType(TextFormField), 'Selected Cup');
     await _tapAdd(tester);
     expect(submittedCompetition?.teamIds, ['team-1']);
@@ -125,12 +121,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsOneWidget);
-    expect(find.text('Knockout - 0 teams'), findsOneWidget);
+    expect(find.text('Knockout - 0 teams'), findsNothing);
     final card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
     expect(card.color, const Color(0xFFFFD95A));
     expect(card.icon, Icons.emoji_events_outlined);
+    expect(card.additionalContent, isNull);
     expect(card.onTap, isNotNull);
     final cardSize = tester.getSize(find.byType(EntityCard));
     expect(cardSize.width, cardSize.height);
@@ -151,8 +148,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsNWidgets(2));
-    expect(find.text('Knockout - 0 teams'), findsOneWidget);
-    expect(find.text('Round robin - 0 teams'), findsOneWidget);
+    expect(find.text('Knockout - 0 teams'), findsNothing);
+    expect(find.text('Round robin - 0 teams'), findsNothing);
   });
 
   testWidgets('empty state and add form remain usable on mobile web', (
@@ -213,26 +210,25 @@ void main() {
       ),
     );
 
-    expect(find.text('Knockout - 2 teams'), findsOneWidget);
+    expect(find.text('Knockout - 2 teams'), findsNothing);
     await tester.tap(find.text('Summer Cup'));
     await tester.pumpAndSettle();
     expect(find.text('Red Rockets'), findsOneWidget);
     expect(find.text('Blue Birds'), findsOneWidget);
 
-    await tester.tap(find.text('Manage teams'));
+    await tester.tap(find.text('Add or remove teams'));
     await tester.pumpAndSettle();
-    final initiallySelected = tester.widget<CheckboxListTile>(
-      find.widgetWithText(CheckboxListTile, 'Red Rockets'),
-    );
-    expect(initiallySelected.value, isTrue);
-    await tester.tap(find.text('Red Rockets').last);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byTooltip('Remove Red Rockets'), findsOneWidget);
+    expect(find.byTooltip('Remove Blue Birds'), findsOneWidget);
+    await tester.tap(find.byTooltip('Remove Red Rockets'));
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(controller.competitions.first.teamIds, ['team-1', 'team-2']);
 
-    await tester.tap(find.text('Manage teams'));
+    await tester.tap(find.text('Add or remove teams'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Red Rockets').last);
+    await tester.tap(find.byTooltip('Remove Red Rockets'));
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
 
@@ -243,7 +239,7 @@ void main() {
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('Knockout - 1 team'), findsOneWidget);
+    expect(find.text('Knockout - 1 team'), findsNothing);
   });
 
   testWidgets('validates, cancels, and saves competition edits', (

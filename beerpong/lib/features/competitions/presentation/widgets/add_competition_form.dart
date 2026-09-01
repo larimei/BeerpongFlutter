@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/widgets/entity_add_form.dart';
+import '../../../../app/widgets/entity_selection.dart';
 import '../../../teams/domain/team.dart';
 import '../../domain/competition.dart';
-import 'team_selection.dart';
 
 class NewCompetition {
   const NewCompetition({
@@ -37,10 +37,13 @@ class AddCompetitionForm extends StatefulWidget {
 
 class _AddCompetitionFormState extends State<AddCompetitionForm> {
   TournamentMode _selectedMode = TournamentMode.knockout;
-  Set<String> _selectedTeamIds = {};
+  final Set<String> _selectedTeamIds = {};
 
-  void _updateTeamSelection(Set<String> teamIds) =>
-      setState(() => _selectedTeamIds = teamIds);
+  void _toggleTeam(String teamId) {
+    setState(() {
+      if (!_selectedTeamIds.remove(teamId)) _selectedTeamIds.add(teamId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,10 +79,14 @@ class _AddCompetitionFormState extends State<AddCompetitionForm> {
             },
           ),
           const SizedBox(height: 24),
-          TeamSelection(
-            teams: widget.teams,
-            selectedTeamIds: _selectedTeamIds,
-            onChanged: _updateTeamSelection,
+          EntitySelection<Team>(
+            label: 'Teams',
+            items: widget.teams,
+            selectedIds: _selectedTeamIds,
+            idOf: (team) => team.id,
+            nameOf: (team) => team.name,
+            emptyMessage: 'No teams available. You can add teams later.',
+            onToggle: _toggleTeam,
           ),
         ],
       ),

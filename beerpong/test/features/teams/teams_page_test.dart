@@ -1,4 +1,5 @@
 import 'package:beerpong/app/app.dart';
+import 'package:beerpong/app/widgets/entity_card.dart';
 import 'package:beerpong/features/competitions/application/competitions_controller.dart';
 import 'package:beerpong/features/competitions/data/competition_repository.dart';
 import 'package:beerpong/features/competitions/domain/competition.dart';
@@ -302,7 +303,7 @@ void main() {
     expect(find.text('1'), findsOneWidget);
   });
 
-  testWidgets('competition cards update their team count after deletion', (
+  testWidgets('competition cards show only their name and icon', (
     tester,
   ) async {
     const deletedTeam = Team(
@@ -332,11 +333,19 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: CompetitionsPage(controller: competitionsController)),
     );
-    expect(find.text('Knockout - 2 teams'), findsOneWidget);
+    var card = tester.widget<EntityCard>(
+      find.widgetWithText(EntityCard, 'First Cup'),
+    );
+    expect(card.additionalContent, isNull);
+    expect(find.text('Knockout - 2 teams'), findsNothing);
 
     teamsController.deleteTeam(deletedTeam.id);
     await tester.pump();
 
-    expect(find.text('Knockout - 1 team'), findsOneWidget);
+    card = tester.widget<EntityCard>(
+      find.widgetWithText(EntityCard, 'First Cup'),
+    );
+    expect(card.additionalContent, isNull);
+    expect(find.text('Knockout - 1 team'), findsNothing);
   });
 }

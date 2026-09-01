@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
+import '../../../app/widgets/entity_selection.dart';
 import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
 import '../domain/competition.dart';
-import 'widgets/team_selection.dart';
 
 class CompetitionDetailsPage extends StatelessWidget {
   const CompetitionDetailsPage({
@@ -75,32 +75,16 @@ class CompetitionDetailsPage extends StatelessWidget {
     BuildContext context,
     Competition competition,
   ) async {
-    var selectedTeamIds = competition.teamIds.toSet();
     final savedTeamIds = await showDialog<List<String>>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Manage teams'),
-          content: SizedBox(
-            width: 420,
-            child: TeamSelection(
-              teams: teams,
-              selectedTeamIds: selectedTeamIds,
-              onChanged: (teamIds) =>
-                  setDialogState(() => selectedTeamIds = teamIds),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, selectedTeamIds.toList()),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+      builder: (context) => EntitySelectionDialog<Team>(
+        title: 'Add or remove teams',
+        label: 'Teams',
+        items: teams,
+        initialIds: competition.teamIds,
+        idOf: (team) => team.id,
+        nameOf: (team) => team.name,
+        emptyMessage: 'No teams available. Add teams first.',
       ),
     );
     if (savedTeamIds == null) return;
@@ -228,7 +212,7 @@ class _CompetitionInformation extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onManageTeams,
             icon: const Icon(Icons.groups_outlined),
-            label: const Text('Manage teams'),
+            label: const Text('Add or remove teams'),
           ),
         ),
         const SizedBox(height: 16),

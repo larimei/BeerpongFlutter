@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
+import '../../../app/widgets/entity_selection.dart';
 import '../../players/application/players_controller.dart';
 import '../../players/domain/player.dart';
 import '../application/teams_controller.dart';
 import '../domain/team.dart';
-import 'widgets/player_selection.dart';
 
 class TeamDetailsPage extends StatelessWidget {
   const TeamDetailsPage({
@@ -95,9 +95,14 @@ class TeamDetailsPage extends StatelessWidget {
   Future<void> _managePlayers(BuildContext context, Team team) async {
     final playerIds = await showDialog<List<String>>(
       context: context,
-      builder: (context) => _ManagePlayersDialog(
-        players: playersController.players,
-        initialPlayerIds: team.playerIds,
+      builder: (context) => EntitySelectionDialog<Player>(
+        title: 'Manage players',
+        label: 'Players',
+        items: playersController.players,
+        initialIds: team.playerIds,
+        idOf: (player) => player.id,
+        nameOf: (player) => player.name,
+        emptyMessage: 'No players available. Add players first.',
       ),
     );
     if (playerIds == null) return;
@@ -174,60 +179,6 @@ class _TeamMembers extends StatelessWidget {
           onPressed: onManage,
           icon: const Icon(Icons.group_add_outlined),
           label: const Text('Manage players'),
-        ),
-      ],
-    );
-  }
-}
-
-class _ManagePlayersDialog extends StatefulWidget {
-  const _ManagePlayersDialog({
-    required this.players,
-    required this.initialPlayerIds,
-  });
-
-  final List<Player> players;
-  final List<String> initialPlayerIds;
-
-  @override
-  State<_ManagePlayersDialog> createState() => _ManagePlayersDialogState();
-}
-
-class _ManagePlayersDialogState extends State<_ManagePlayersDialog> {
-  late final Set<String> _selectedPlayerIds;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedPlayerIds = widget.initialPlayerIds.toSet();
-  }
-
-  void _togglePlayer(String id) {
-    setState(() {
-      if (!_selectedPlayerIds.remove(id)) _selectedPlayerIds.add(id);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Manage players'),
-      content: SizedBox(
-        width: 420,
-        child: PlayerSelection(
-          players: widget.players,
-          selectedPlayerIds: _selectedPlayerIds,
-          onChanged: _togglePlayer,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _selectedPlayerIds.toList()),
-          child: const Text('Save'),
         ),
       ],
     );

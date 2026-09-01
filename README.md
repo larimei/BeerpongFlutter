@@ -7,19 +7,19 @@ This project is mainly built as a learning project to improve my skills in:
 - Flutter and Dart
 - App architecture and state management
 - UI development
-- Programming with OpenAI Codex
+- Programming with OpenAI Codex and Skills
 
 ## Features
 
 - Create and manage players
 - View player details and statistics
 - Create and manage teams
-- Create competitions
+- Create competitions based on round robin and k.o.
 - Manage games within competitions
 
 ## Purpose
 
-The main goal of this project is not to build a production-ready beer pong platform, but to learn Flutter and improve my programming workflow by developing the application together with Codex.
+The main goal of this project is not to build a production-ready beer pong platform, but to learn Flutter and improve my programming workflow by developing the application together with Codex, Agents and Skills by Matt Pocock.
 
 ## Running the Project
 

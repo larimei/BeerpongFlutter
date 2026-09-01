@@ -43,11 +43,6 @@ class CompetitionsPage extends StatelessWidget {
                 name: competition.name,
                 color: competition.color,
                 icon: Icons.emoji_events_outlined,
-                additionalContent: Text(
-                  '${competition.mode.label} - '
-                  '${competition.teamIds.length} '
-                  '${competition.teamIds.length == 1 ? 'team' : 'teams'}',
-                ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(

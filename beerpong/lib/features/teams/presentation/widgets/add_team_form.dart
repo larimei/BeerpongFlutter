@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/widgets/entity_add_form.dart';
+import '../../../../app/widgets/entity_selection.dart';
 import '../../../players/domain/player.dart';
 import '../../data/team_name_generator.dart';
-import 'player_selection.dart';
 
 class NewTeam {
   const NewTeam({
@@ -74,10 +74,14 @@ class _AddTeamFormState extends State<AddTeamForm> {
       iconKey: const Key('add-team-icon'),
       colorPickerIconKey: const Key('color-picker-team-icon'),
       colorPickerWheelKey: const Key('team-color-wheel'),
-      additionalFields: PlayerSelection(
-        players: widget.players,
-        selectedPlayerIds: _selectedPlayerIds,
-        onChanged: _togglePlayer,
+      additionalFields: EntitySelection<Player>(
+        label: 'Players',
+        items: widget.players,
+        selectedIds: _selectedPlayerIds,
+        idOf: (player) => player.id,
+        nameOf: (player) => player.name,
+        emptyMessage: 'No players available. Add players first.',
+        onToggle: _togglePlayer,
       ),
       onSubmit: (team) => widget.onSubmit(
         NewTeam(
