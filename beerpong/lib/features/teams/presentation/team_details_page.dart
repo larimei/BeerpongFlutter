@@ -4,6 +4,7 @@ import '../../../app/widgets/entity_details_content.dart';
 import '../../../app/widgets/entity_delete_dialog.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
 import '../../../app/widgets/entity_selection.dart';
+import '../../competitions/application/competitions_controller.dart';
 import '../../players/application/players_controller.dart';
 import '../../players/domain/player.dart';
 import '../application/teams_controller.dart';
@@ -14,20 +15,29 @@ class TeamDetailsPage extends StatelessWidget {
     required this.teamId,
     required this.controller,
     required this.playersController,
+    this.competitionsController,
     super.key,
   });
 
   final String teamId;
   final TeamsController controller;
   final PlayersController playersController;
+  final CompetitionsController? competitionsController;
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([controller, playersController]),
+      listenable: Listenable.merge([
+        controller,
+        playersController,
+        ?competitionsController,
+      ]),
       builder: (context, child) {
         final team = controller.teamById(teamId);
         final players = team == null ? <Player>[] : _playersFor(team.playerIds);
+        final statistics = team == null || competitionsController == null
+            ? null
+            : competitionsController!.statistics.forTeam(team.id);
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
@@ -49,8 +59,8 @@ class TeamDetailsPage extends StatelessWidget {
                     name: team.name,
                     color: team.color,
                     icon: Icons.groups_outlined,
-                    won: team.won,
-                    lost: team.lost,
+                    won: statistics?.won ?? 0,
+                    lost: statistics?.lost ?? 0,
                     entityName: 'team',
                     surfaceKey: const Key('team-details-surface'),
                     avatarKey: const Key('team-avatar'),

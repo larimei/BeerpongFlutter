@@ -86,6 +86,8 @@ class CompetitionDetailsPage extends StatelessWidget {
                           : controller.generateRoundRobinTournament(
                               competition.id,
                             ),
+                      onResetTournament: () =>
+                          _resetTournament(context, competition),
                     ),
                     onEdit: () => _editCompetition(context, competition),
                     onDelete: () => _deleteCompetition(context, competition),
@@ -100,6 +102,12 @@ class CompetitionDetailsPage extends StatelessWidget {
                               competitionId: competition.id,
                               matchId: matchId,
                               winnerTeamId: winnerTeamId,
+                              playerIdsByTeam: _playerIdsByTeam(assignedTeams),
+                            ),
+                        onClearOutcomePath: (matchId) =>
+                            controller.clearKnockoutOutcomePath(
+                              competitionId: competition.id,
+                              matchId: matchId,
                             ),
                       )
                     : RoundRobinTournamentTab(
@@ -110,6 +118,7 @@ class CompetitionDetailsPage extends StatelessWidget {
                               competitionId: competition.id,
                               matchId: matchId,
                               winnerTeamId: winnerTeamId,
+                              playerIdsByTeam: _playerIdsByTeam(assignedTeams),
                             ),
                       ),
               ],
@@ -137,6 +146,12 @@ class CompetitionDetailsPage extends StatelessWidget {
       ),
     );
     if (savedTeamIds == null) return;
+    if (!context.mounted) return;
+    if (!_sameIds(competition.teamIds, savedTeamIds) &&
+        !await _canReplacePlan(context, competition, teamIds: savedTeamIds)) {
+      return;
+    }
+    if (!context.mounted) return;
     controller.updateCompetitionTeams(
       id: competition.id,
       teamIds: savedTeamIds,
@@ -184,6 +199,12 @@ class CompetitionDetailsPage extends StatelessWidget {
       ),
     );
     if (edits == null) return;
+    if (!context.mounted) return;
+    if (selectedMode != competition.mode &&
+        !await _canReplacePlan(context, competition, mode: selectedMode)) {
+      return;
+    }
+    if (!context.mounted) return;
     controller.updateCompetition(
       id: competition.id,
       name: edits.name,
@@ -217,7 +238,84 @@ class CompetitionDetailsPage extends StatelessWidget {
     controller.deleteCompetition(competition.id);
     Navigator.pop(context);
   }
+
+  Future<void> _resetTournament(
+    BuildContext context,
+    Competition competition,
+  ) async {
+    final shouldReset = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset tournament?'),
+        content: const Text(
+          'This removes the generated tournament and all confirmed outcomes. '
+          'Derived team and player statistics will be updated.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reset tournament'),
+          ),
+        ],
+      ),
+    );
+    if (shouldReset ?? false) controller.resetTournament(competition.id);
+  }
+
+  Future<bool> _canReplacePlan(
+    BuildContext context,
+    Competition competition, {
+    TournamentMode? mode,
+    List<String>? teamIds,
+  }) async {
+    final hasTournament =
+        competition.tournament != null ||
+        competition.roundRobinTournament != null;
+    if (!hasTournament) return true;
+    if (!controller.canReplaceTournamentPlan(
+      competitionId: competition.id,
+      mode: mode,
+      teamIds: teamIds,
+    )) {
+      await _resetTournament(context, competition);
+      return controller.competitionById(competition.id)?.tournament == null &&
+          controller.competitionById(competition.id)?.roundRobinTournament ==
+              null;
+    }
+    final shouldReplace = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Replace tournament plan?'),
+        content: const Text(
+          'No game has been confirmed. This change will replace the generated '
+          'tournament plan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Replace plan'),
+          ),
+        ],
+      ),
+    );
+    return shouldReplace ?? false;
+  }
 }
+
+bool _sameIds(List<String> first, List<String> second) =>
+    first.length == second.length && first.every(second.contains);
+
+Map<String, List<String>> _playerIdsByTeam(List<Team> teams) => {
+  for (final team in teams) team.id: team.playerIds,
+};
 
 class _CompetitionInformation extends StatelessWidget {
   const _CompetitionInformation({
@@ -225,12 +323,14 @@ class _CompetitionInformation extends StatelessWidget {
     required this.assignedTeams,
     required this.onManageTeams,
     required this.onGenerateTournament,
+    required this.onResetTournament,
   });
 
   final Competition competition;
   final List<Team> assignedTeams;
   final VoidCallback onManageTeams;
   final VoidCallback onGenerateTournament;
+  final VoidCallback onResetTournament;
 
   @override
   Widget build(BuildContext context) {
@@ -284,10 +384,21 @@ class _CompetitionInformation extends StatelessWidget {
               label: const Text('Generate tournament'),
             )
           else
-            Text(
-              competition.mode == TournamentMode.knockout
-                  ? 'Tournament bracket generated'
-                  : 'Round-robin games generated',
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  competition.mode == TournamentMode.knockout
+                      ? 'Tournament bracket generated'
+                      : 'Round-robin games generated',
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onResetTournament,
+                  icon: const Icon(Icons.restart_alt_outlined),
+                  label: const Text('Reset tournament'),
+                ),
+              ],
             ),
           if (assignedTeams.length < 2 &&
               competition.tournament == null &&

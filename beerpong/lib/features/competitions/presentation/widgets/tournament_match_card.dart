@@ -9,6 +9,7 @@ class TournamentMatchCard extends StatelessWidget {
     required this.onWinnerSelected,
     required this.onConfirm,
     this.winnerTeamId,
+    this.onCorrectResult,
     this.isPlayable = true,
     this.isBye = false,
     super.key,
@@ -21,6 +22,7 @@ class TournamentMatchCard extends StatelessWidget {
   final ValueChanged<String> onWinnerSelected;
   final VoidCallback onConfirm;
   final String? winnerTeamId;
+  final VoidCallback? onCorrectResult;
   final bool isPlayable;
   final bool isBye;
 
@@ -50,7 +52,11 @@ class TournamentMatchCard extends StatelessWidget {
       );
     }
     if (winnerTeamId != null) {
-      return _resultCard(context, winnerId: winnerTeamId);
+      return _resultCard(
+        context,
+        winnerId: winnerTeamId,
+        onCorrectResult: onCorrectResult,
+      );
     }
     if (!isPlayable) {
       return _resultCard(context, subtitle: 'Waiting for both teams');
@@ -115,15 +121,27 @@ class TournamentMatchCard extends StatelessWidget {
     BuildContext context, {
     String? winnerId,
     String? subtitle,
+    VoidCallback? onCorrectResult,
   }) => Card(
     child: Padding(
       padding: const EdgeInsets.all(12),
-      child: _MatchTeams(
-        teamIds: teamIds,
-        names: names,
-        colors: colors,
-        winnerId: winnerId,
-        subtitle: subtitle,
+      child: Column(
+        children: [
+          _MatchTeams(
+            teamIds: teamIds,
+            names: names,
+            colors: colors,
+            winnerId: winnerId,
+            subtitle: subtitle,
+          ),
+          if (onCorrectResult != null) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: onCorrectResult,
+              child: const Text('Correct result'),
+            ),
+          ],
+        ],
       ),
     ),
   );

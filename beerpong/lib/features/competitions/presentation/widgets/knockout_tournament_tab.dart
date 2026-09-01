@@ -9,12 +9,14 @@ class KnockoutTournamentTab extends StatefulWidget {
     required this.competition,
     required this.teams,
     required this.onConfirmWinner,
+    this.onClearOutcomePath,
     super.key,
   });
 
   final Competition competition;
   final List<Team> teams;
   final bool Function(String matchId, String winnerTeamId) onConfirmWinner;
+  final bool Function(String matchId)? onClearOutcomePath;
 
   @override
   State<KnockoutTournamentTab> createState() => _KnockoutTournamentTabState();
@@ -78,6 +80,10 @@ class _KnockoutTournamentTabState extends State<KnockoutTournamentTab> {
                 names: names,
                 colors: colors,
                 winnerTeamId: match.winnerTeamId,
+                onCorrectResult:
+                    match.isBye || widget.onClearOutcomePath == null
+                    ? null
+                    : () => _clearOutcomePath(context, match.id),
                 isPlayable: match.isPlayable,
                 isBye: match.isBye,
                 selectedWinnerId: _selectedWinners[match.id],
@@ -102,6 +108,32 @@ class _KnockoutTournamentTabState extends State<KnockoutTournamentTab> {
 
   String _teamName(String? teamId, Map<String, String> names) =>
       teamId == null ? 'To be decided' : names[teamId] ?? teamId;
+
+  Future<void> _clearOutcomePath(BuildContext context, String matchId) async {
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear affected results?'),
+        content: const Text(
+          'Correcting this result clears it and every dependent confirmed '
+          'outcome. You can then confirm the corrected result.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear results'),
+          ),
+        ],
+      ),
+    );
+    if ((shouldClear ?? false) && context.mounted) {
+      widget.onClearOutcomePath!(matchId);
+    }
+  }
 
   String _roundName(int round, int roundCount) {
     if (round == roundCount - 1) return 'Final';

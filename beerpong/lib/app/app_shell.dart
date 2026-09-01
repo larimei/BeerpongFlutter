@@ -157,11 +157,13 @@ class _AppShellState extends State<AppShell> {
           children: [
             PlayersPage(
               controller: _playersController,
+              competitionsController: _competitionsController,
               onOpenSettings: _openSettings,
             ),
             TeamsPage(
               controller: _teamsController,
               playersController: _playersController,
+              competitionsController: _competitionsController,
               onOpenSettings: _openSettings,
             ),
             CompetitionsPage(

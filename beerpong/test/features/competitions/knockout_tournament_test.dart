@@ -155,6 +155,48 @@ void main() {
       },
     );
 
+    test('requires an explicit reset before changing a played tournament', () {
+      controller.generateKnockoutTournament('cup');
+      final match = controller
+          .competitionById('cup')!
+          .tournament!
+          .matches
+          .single;
+      controller.confirmKnockoutMatchWinner(
+        competitionId: 'cup',
+        matchId: match.id,
+        winnerTeamId: match.teamIds.first!,
+      );
+
+      expect(
+        controller.canReplaceTournamentPlan(
+          competitionId: 'cup',
+          mode: TournamentMode.roundRobin,
+        ),
+        isFalse,
+      );
+      expect(
+        controller.updateCompetition(
+          id: 'cup',
+          name: 'Cup',
+          mode: TournamentMode.roundRobin,
+          color: Colors.amber,
+        ),
+        isFalse,
+      );
+      expect(controller.competitionById('cup')!.mode, TournamentMode.knockout);
+      expect(controller.resetTournament('cup'), isTrue);
+      expect(
+        controller.updateCompetition(
+          id: 'cup',
+          name: 'Cup',
+          mode: TournamentMode.roundRobin,
+          color: Colors.amber,
+        ),
+        isTrue,
+      );
+    });
+
     test('persists the drawn bracket and confirmed outcome', () {
       controller.generateKnockoutTournament('cup');
       final tournament = controller.competitionById('cup')!.tournament!;
@@ -178,6 +220,86 @@ void main() {
         tournament.drawOrder,
       );
       expect(restored?.competitions.single.tournament?.winnerTeamId, winner);
+    });
+
+    test('snapshots player membership when confirming a result', () {
+      controller.generateKnockoutTournament('cup');
+      final match = controller
+          .competitionById('cup')!
+          .tournament!
+          .matches
+          .single;
+
+      controller.confirmKnockoutMatchWinner(
+        competitionId: 'cup',
+        matchId: match.id,
+        winnerTeamId: 'red',
+        playerIdsByTeam: const {
+          'red': ['player-1'],
+          'blue': ['player-2'],
+        },
+      );
+
+      expect(
+        controller
+            .competitionById('cup')!
+            .tournament!
+            .matches
+            .single
+            .playerIdsByTeam,
+        const {
+          'red': ['player-1'],
+          'blue': ['player-2'],
+        },
+      );
+    });
+
+    test('clears confirmed dependent results before correcting a match', () {
+      controller.dispose();
+      controller = CompetitionsController(
+        InMemoryCompetitionRepository(const [
+          Competition(
+            id: 'cup',
+            name: 'Cup',
+            mode: TournamentMode.knockout,
+            color: Colors.amber,
+            teamIds: ['red', 'blue', 'green', 'yellow'],
+          ),
+        ]),
+      );
+      controller.generateKnockoutTournament('cup');
+      final tournament = controller.competitionById('cup')!.tournament!;
+      for (final match in tournament.matches.where(
+        (match) => match.round == 0,
+      )) {
+        controller.confirmKnockoutMatchWinner(
+          competitionId: 'cup',
+          matchId: match.id,
+          winnerTeamId: match.teamIds.first!,
+        );
+      }
+      final finalMatch = controller
+          .competitionById('cup')!
+          .tournament!
+          .matches
+          .last;
+      controller.confirmKnockoutMatchWinner(
+        competitionId: 'cup',
+        matchId: finalMatch.id,
+        winnerTeamId: finalMatch.teamIds.first!,
+      );
+
+      expect(
+        controller.clearKnockoutOutcomePath(
+          competitionId: 'cup',
+          matchId: tournament.matches.first.id,
+        ),
+        isTrue,
+      );
+      final cleared = controller.competitionById('cup')!.tournament!;
+      expect(cleared.matches.first.winnerTeamId, isNull);
+      expect(cleared.matches.last.winnerTeamId, isNull);
+      expect(cleared.matches.last.teamIds.first, isNull);
     });
   });
 }

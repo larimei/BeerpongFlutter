@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/competition_repository.dart';
 import '../domain/competition.dart';
+import '../domain/competition_statistics.dart';
 
 class CompetitionsController extends ChangeNotifier {
   CompetitionsController(this._repository, {VoidCallback? onChanged})
@@ -14,6 +15,9 @@ class CompetitionsController extends ChangeNotifier {
   int _nextId = 0;
 
   List<Competition> get competitions => List.unmodifiable(_competitions);
+
+  CompetitionStatistics get statistics =>
+      CompetitionStatistics.fromCompetitions(_competitions);
 
   Competition? competitionById(String id) => _repository.getById(id);
 
@@ -49,12 +53,15 @@ class CompetitionsController extends ChangeNotifier {
   }) {
     final currentCompetition = _repository.getById(id);
     if (currentCompetition == null) return false;
+    final updatedTeamIds = List<String>.unmodifiable(teamIds.toSet());
+    final teamsChanged = !_sameIds(currentCompetition.teamIds, updatedTeamIds);
+    if (teamsChanged && currentCompetition.hasConfirmedGames) return false;
     _repository.update(
       currentCompetition.copyWith(
-        teamIds: List.unmodifiable(teamIds.toSet()),
-        clearTournament: currentCompetition.tournament != null,
+        teamIds: updatedTeamIds,
+        clearTournament: teamsChanged && currentCompetition.tournament != null,
         clearRoundRobinTournament:
-            currentCompetition.roundRobinTournament != null,
+            teamsChanged && currentCompetition.roundRobinTournament != null,
       ),
     );
     _refresh();
@@ -101,6 +108,7 @@ class CompetitionsController extends ChangeNotifier {
     required String competitionId,
     required String matchId,
     required String winnerTeamId,
+    Map<String, List<String>> playerIdsByTeam = const {},
   }) {
     final competition = _repository.getById(competitionId);
     final tournament = competition?.tournament;
@@ -112,6 +120,7 @@ class CompetitionsController extends ChangeNotifier {
     final updatedTournament = tournament.confirmWinner(
       matchId: matchId,
       winnerTeamId: winnerTeamId,
+      playerIdsByTeam: playerIdsByTeam,
     );
     if (identical(updatedTournament, tournament)) return false;
     _repository.update(competition.copyWith(tournament: updatedTournament));
@@ -123,6 +132,7 @@ class CompetitionsController extends ChangeNotifier {
     required String competitionId,
     required String matchId,
     required String winnerTeamId,
+    Map<String, List<String>> playerIdsByTeam = const {},
   }) {
     final competition = _repository.getById(competitionId);
     final tournament = competition?.roundRobinTournament;
@@ -134,11 +144,26 @@ class CompetitionsController extends ChangeNotifier {
     final updatedTournament = tournament.confirmWinner(
       matchId: matchId,
       winnerTeamId: winnerTeamId,
+      playerIdsByTeam: playerIdsByTeam,
     );
     if (identical(updatedTournament, tournament)) return false;
     _repository.update(
       competition.copyWith(roundRobinTournament: updatedTournament),
     );
+    _refresh();
+    return true;
+  }
+
+  bool clearKnockoutOutcomePath({
+    required String competitionId,
+    required String matchId,
+  }) {
+    final competition = _repository.getById(competitionId);
+    final tournament = competition?.tournament;
+    if (competition == null || tournament == null) return false;
+    final updatedTournament = tournament.clearOutcomePath(matchId);
+    if (identical(updatedTournament, tournament)) return false;
+    _repository.update(competition.copyWith(tournament: updatedTournament));
     _refresh();
     return true;
   }
@@ -152,13 +177,16 @@ class CompetitionsController extends ChangeNotifier {
     final trimmedName = name.trim();
     final currentCompetition = _repository.getById(id);
     if (trimmedName.isEmpty || currentCompetition == null) return false;
+    final modeChanged = mode != currentCompetition.mode;
+    if (modeChanged && currentCompetition.hasConfirmedGames) return false;
     _repository.update(
       currentCompetition.copyWith(
         name: trimmedName,
         mode: mode,
         color: color,
-        clearTournament: mode != TournamentMode.knockout,
-        clearRoundRobinTournament: mode != TournamentMode.roundRobin,
+        clearTournament: modeChanged && mode != TournamentMode.knockout,
+        clearRoundRobinTournament:
+            modeChanged && mode != TournamentMode.roundRobin,
       ),
     );
     _refresh();
@@ -181,6 +209,41 @@ class CompetitionsController extends ChangeNotifier {
     _refresh();
   }
 
+  bool canReplaceTournamentPlan({
+    required String competitionId,
+    TournamentMode? mode,
+    List<String>? teamIds,
+  }) {
+    final competition = _repository.getById(competitionId);
+    if (competition == null) return false;
+    final wouldChangeMode = mode != null && mode != competition.mode;
+    final wouldChangeTeams =
+        teamIds != null &&
+        !_sameIds(
+          competition.teamIds,
+          List<String>.unmodifiable(teamIds.toSet()),
+        );
+    return (!wouldChangeMode && !wouldChangeTeams) ||
+        !competition.hasConfirmedGames;
+  }
+
+  bool resetTournament(String competitionId) {
+    final competition = _repository.getById(competitionId);
+    if (competition == null ||
+        (competition.tournament == null &&
+            competition.roundRobinTournament == null)) {
+      return false;
+    }
+    _repository.update(
+      competition.copyWith(
+        clearTournament: true,
+        clearRoundRobinTournament: true,
+      ),
+    );
+    _refresh();
+    return true;
+  }
+
   void deleteCompetition(String id) {
     _repository.delete(id);
     _refresh();
@@ -199,3 +262,6 @@ class CompetitionsController extends ChangeNotifier {
 }
 
 void _doNothing() {}
+
+bool _sameIds(List<String> first, List<String> second) =>
+    first.length == second.length && first.every((id) => second.contains(id));

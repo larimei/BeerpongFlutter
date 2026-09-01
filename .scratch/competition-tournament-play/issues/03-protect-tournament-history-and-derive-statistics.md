@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Play a knockout competition; 02: Play a round-robin competition.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Before any confirmed game, changing a competition's teams or mode warns that the existing plan will be regenerated; cancelling preserves it and confirming replaces the unstarted plan.
 - [ ] After a confirmed game, teams and mode can change only through a clearly explained reset that removes the generated tournament and its outcomes.
@@ -14,3 +14,11 @@
 - [ ] Resetting or clearing confirmed outcomes removes their derived team and player statistic effects.
 - [ ] Automated domain/controller and widget tests cover generation warnings, reset and correction cascades, player membership changes, historical result attribution, and derived statistic updates.
 - [ ] Formatting, static analysis, and all relevant tests pass.
+
+## Answer
+
+Tournament edits now preserve confirmed history until an explicit reset, knockout
+result correction clears dependent outcomes, and statistics are derived from
+confirmed games with player membership snapshotted when a result is confirmed.
+Persistence, controller/domain behavior, and the tournament/detail-page flows
+are covered by tests; `flutter analyze` and `flutter test` pass.

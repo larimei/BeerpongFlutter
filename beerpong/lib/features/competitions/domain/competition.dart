@@ -31,6 +31,10 @@ class Competition {
   final KnockoutTournament? tournament;
   final RoundRobinTournament? roundRobinTournament;
 
+  bool get hasConfirmedGames =>
+      tournament?.hasConfirmedGames == true ||
+      roundRobinTournament?.hasConfirmedGames == true;
+
   Competition copyWith({
     String? name,
     TournamentMode? mode,
@@ -84,6 +88,9 @@ class RoundRobinTournament {
   final List<String> drawOrder;
   final List<RoundRobinMatch> matches;
 
+  bool get hasConfirmedGames =>
+      matches.any((match) => match.winnerTeamId != null);
+
   bool get isComplete => matches.every((match) => match.winnerTeamId != null);
 
   RoundRobinMatch? get nextMatch {
@@ -136,6 +143,7 @@ class RoundRobinTournament {
   RoundRobinTournament confirmWinner({
     required String matchId,
     required String winnerTeamId,
+    Map<String, List<String>> playerIdsByTeam = const {},
   }) {
     RoundRobinMatch? match;
     for (final candidate in matches) {
@@ -154,7 +162,13 @@ class RoundRobinTournament {
       matches: List.unmodifiable([
         for (final candidate in matches)
           if (candidate.id == matchId)
-            candidate.copyWith(winnerTeamId: winnerTeamId)
+            candidate.copyWith(
+              winnerTeamId: winnerTeamId,
+              playerIdsByTeam: _participantPlayers(
+                candidate.teamIds,
+                playerIdsByTeam,
+              ),
+            )
           else
             candidate,
       ]),
@@ -168,16 +182,22 @@ class RoundRobinMatch {
     required this.id,
     required this.teamIds,
     this.winnerTeamId,
+    this.playerIdsByTeam = const {},
   });
 
   final String id;
   final List<String> teamIds;
   final String? winnerTeamId;
+  final Map<String, List<String>> playerIdsByTeam;
 
-  RoundRobinMatch copyWith({String? winnerTeamId}) => RoundRobinMatch(
+  RoundRobinMatch copyWith({
+    String? winnerTeamId,
+    Map<String, List<String>>? playerIdsByTeam,
+  }) => RoundRobinMatch(
     id: id,
     teamIds: teamIds,
     winnerTeamId: winnerTeamId ?? this.winnerTeamId,
+    playerIdsByTeam: playerIdsByTeam ?? this.playerIdsByTeam,
   );
 }
 
@@ -250,6 +270,9 @@ class KnockoutTournament {
   final int bracketSize;
   final List<KnockoutMatch> matches;
 
+  bool get hasConfirmedGames =>
+      matches.any((match) => !match.isBye && match.winnerTeamId != null);
+
   bool get isComplete => winnerTeamId != null;
 
   String? get winnerTeamId => matches.last.winnerTeamId;
@@ -264,6 +287,7 @@ class KnockoutTournament {
   KnockoutTournament confirmWinner({
     required String matchId,
     required String winnerTeamId,
+    Map<String, List<String>> playerIdsByTeam = const {},
   }) {
     final match = matchById(matchId);
     if (match == null ||
@@ -271,8 +295,42 @@ class KnockoutTournament {
         !match.teamIds.contains(winnerTeamId)) {
       return this;
     }
-    return _replace(match.copyWith(winnerTeamId: winnerTeamId))
-        ._advance(match.copyWith(winnerTeamId: winnerTeamId));
+    final confirmedMatch = match.copyWith(
+      winnerTeamId: winnerTeamId,
+      playerIdsByTeam: _participantPlayers(
+        match.teamIds.whereType<String>(),
+        playerIdsByTeam,
+      ),
+    );
+    return _replace(confirmedMatch)._advance(confirmedMatch);
+  }
+
+  KnockoutTournament clearOutcomePath(String matchId) {
+    final firstMatch = matchById(matchId);
+    if (firstMatch == null ||
+        firstMatch.winnerTeamId == null ||
+        firstMatch.isBye) {
+      return this;
+    }
+    var tournament = this;
+    var current = firstMatch.clearOutcome();
+    while (true) {
+      tournament = tournament._replace(current);
+      if (current.round == tournament._lastRound) return tournament;
+      final nextRound = current.round + 1;
+      final nextIndex = current.index ~/ 2;
+      final next = tournament.matches.firstWhere(
+        (candidate) =>
+            candidate.round == nextRound && candidate.index == nextIndex,
+      );
+      final slots = List<String?>.of(next.teamIds);
+      slots[current.index % 2] = null;
+      current = next.copyWith(
+        teamIds: slots,
+        clearWinnerTeamId: true,
+        playerIdsByTeam: const {},
+      );
+    }
   }
 
   KnockoutTournament _advance(KnockoutMatch match) {
@@ -300,6 +358,16 @@ class KnockoutTournament {
   );
 }
 
+Map<String, List<String>> _participantPlayers(
+  Iterable<String> teamIds,
+  Map<String, List<String>> playerIdsByTeam,
+) => Map.unmodifiable({
+  for (final teamId in teamIds)
+    teamId: List<String>.unmodifiable(
+      playerIdsByTeam[teamId] ?? const <String>[],
+    ),
+});
+
 @immutable
 class KnockoutMatch {
   const KnockoutMatch({
@@ -309,6 +377,7 @@ class KnockoutMatch {
     required this.teamIds,
     this.winnerTeamId,
     this.isBye = false,
+    this.playerIdsByTeam = const {},
   });
 
   final String id;
@@ -317,17 +386,26 @@ class KnockoutMatch {
   final List<String?> teamIds;
   final String? winnerTeamId;
   final bool isBye;
+  final Map<String, List<String>> playerIdsByTeam;
 
   bool get isPlayable =>
       !isBye && winnerTeamId == null && teamIds.every((team) => team != null);
 
-  KnockoutMatch copyWith({List<String?>? teamIds, String? winnerTeamId}) =>
-      KnockoutMatch(
-        id: id,
-        round: round,
-        index: index,
-        teamIds: teamIds ?? this.teamIds,
-        winnerTeamId: winnerTeamId ?? this.winnerTeamId,
-        isBye: isBye,
-      );
+  KnockoutMatch copyWith({
+    List<String?>? teamIds,
+    String? winnerTeamId,
+    Map<String, List<String>>? playerIdsByTeam,
+    bool clearWinnerTeamId = false,
+  }) => KnockoutMatch(
+    id: id,
+    round: round,
+    index: index,
+    teamIds: teamIds ?? this.teamIds,
+    winnerTeamId: clearWinnerTeamId ? null : winnerTeamId ?? this.winnerTeamId,
+    isBye: isBye,
+    playerIdsByTeam: playerIdsByTeam ?? this.playerIdsByTeam,
+  );
+
+  KnockoutMatch clearOutcome() =>
+      copyWith(clearWinnerTeamId: true, playerIdsByTeam: const {});
 }

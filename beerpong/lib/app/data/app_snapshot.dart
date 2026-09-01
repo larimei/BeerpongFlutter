@@ -132,6 +132,7 @@ Map<String, Object> _competitionToJson(Competition competition) => {
               'teamIds': match.teamIds,
               'winnerTeamId': match.winnerTeamId,
               'isBye': match.isBye,
+              'playerIdsByTeam': match.playerIdsByTeam,
             },
           )
           .toList(),
@@ -145,6 +146,7 @@ Map<String, Object> _competitionToJson(Competition competition) => {
               'id': match.id,
               'teamIds': match.teamIds,
               'winnerTeamId': match.winnerTeamId,
+              'playerIdsByTeam': match.playerIdsByTeam,
             },
           )
           .toList(),
@@ -259,14 +261,21 @@ RoundRobinTournament? _roundRobinTournamentFromJson(Object? value) {
     final id = match['id'];
     final teamIds = _stringList(match['teamIds']);
     final winner = match['winnerTeamId'];
+    final playerIdsByTeam = _playerIdsByTeam(match['playerIdsByTeam']);
     if (id is! String ||
         teamIds == null ||
         teamIds.length != 2 ||
-        (winner != null && winner is! String)) {
+        (winner != null && winner is! String) ||
+        playerIdsByTeam == null) {
       return null;
     }
     matches.add(
-      RoundRobinMatch(id: id, teamIds: teamIds, winnerTeamId: winner),
+      RoundRobinMatch(
+        id: id,
+        teamIds: teamIds,
+        winnerTeamId: winner,
+        playerIdsByTeam: playerIdsByTeam,
+      ),
     );
   }
   if (matches.isEmpty) return null;
@@ -300,6 +309,7 @@ KnockoutTournament? _tournamentFromJson(Object? value) {
     final teamIds = match['teamIds'];
     final winner = match['winnerTeamId'];
     final isBye = match['isBye'];
+    final playerIdsByTeam = _playerIdsByTeam(match['playerIdsByTeam']);
     if (id is! String ||
         round is! int ||
         index is! int ||
@@ -307,7 +317,8 @@ KnockoutTournament? _tournamentFromJson(Object? value) {
         teamIds.length != 2 ||
         teamIds.any((team) => team != null && team is! String) ||
         winner != null && winner is! String ||
-        isBye is! bool) {
+        isBye is! bool ||
+        playerIdsByTeam == null) {
       return null;
     }
     matches.add(
@@ -318,6 +329,7 @@ KnockoutTournament? _tournamentFromJson(Object? value) {
         teamIds: List<String?>.from(teamIds),
         winnerTeamId: winner,
         isBye: isBye,
+        playerIdsByTeam: playerIdsByTeam,
       ),
     );
   }
@@ -332,4 +344,17 @@ KnockoutTournament? _tournamentFromJson(Object? value) {
 List<String>? _stringList(Object? value) {
   if (value is! List || value.any((item) => item is! String)) return null;
   return List<String>.from(value);
+}
+
+Map<String, List<String>>? _playerIdsByTeam(Object? value) {
+  if (value == null) return const {};
+  if (value is! Map) return null;
+  final playerIdsByTeam = <String, List<String>>{};
+  for (final entry in value.entries) {
+    if (entry.key is! String) return null;
+    final playerIds = _stringList(entry.value);
+    if (playerIds == null) return null;
+    playerIdsByTeam[entry.key as String] = playerIds;
+  }
+  return Map.unmodifiable(playerIdsByTeam);
 }

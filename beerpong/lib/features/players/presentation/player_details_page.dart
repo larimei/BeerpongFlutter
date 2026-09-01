@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/widgets/entity_details_content.dart';
 import '../../../app/widgets/entity_delete_dialog.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
+import '../../competitions/application/competitions_controller.dart';
 import '../application/players_controller.dart';
 import '../domain/player.dart';
 
@@ -10,18 +11,26 @@ class PlayerDetailsPage extends StatelessWidget {
   const PlayerDetailsPage({
     required this.playerId,
     required this.controller,
+    this.competitionsController,
     super.key,
   });
 
   final String playerId;
   final PlayersController controller;
+  final CompetitionsController? competitionsController;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
+      animation: Listenable.merge([
+        controller,
+        ?competitionsController,
+      ]),
       builder: (context, child) {
         final player = controller.playerById(playerId);
+        final statistics = player == null || competitionsController == null
+            ? null
+            : competitionsController!.statistics.forPlayer(player.id);
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
@@ -43,8 +52,8 @@ class PlayerDetailsPage extends StatelessWidget {
                     name: player.name,
                     color: player.color,
                     icon: Icons.sports_bar_outlined,
-                    won: player.won,
-                    lost: player.lost,
+                    won: statistics?.won ?? 0,
+                    lost: statistics?.lost ?? 0,
                     entityName: 'player',
                     surfaceKey: const Key('player-details-surface'),
                     avatarKey: const Key('player-avatar'),

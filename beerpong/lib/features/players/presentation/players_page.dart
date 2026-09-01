@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_card.dart';
+import '../../competitions/application/competitions_controller.dart';
 import '../application/players_controller.dart';
 import 'player_details_page.dart';
 
 class PlayersPage extends StatelessWidget {
   const PlayersPage({
     required this.controller,
+    this.competitionsController,
     this.onOpenSettings,
     super.key,
   });
 
   final PlayersController controller;
+  final CompetitionsController? competitionsController;
   final VoidCallback? onOpenSettings;
 
   @override
@@ -56,6 +59,7 @@ class PlayersPage extends StatelessWidget {
                     builder: (context) => PlayerDetailsPage(
                       playerId: player.id,
                       controller: controller,
+                      competitionsController: competitionsController,
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/widgets/entity_card.dart';
 import '../../players/application/players_controller.dart';
 import '../../players/domain/player.dart';
+import '../../competitions/application/competitions_controller.dart';
 import '../application/teams_controller.dart';
 import 'team_details_page.dart';
 
@@ -10,12 +11,14 @@ class TeamsPage extends StatelessWidget {
   const TeamsPage({
     required this.controller,
     required this.playersController,
+    this.competitionsController,
     this.onOpenSettings,
     super.key,
   });
 
   final TeamsController controller;
   final PlayersController playersController;
+  final CompetitionsController? competitionsController;
   final VoidCallback? onOpenSettings;
 
   @override
@@ -61,6 +64,7 @@ class TeamsPage extends StatelessWidget {
                       teamId: team.id,
                       controller: controller,
                       playersController: playersController,
+                      competitionsController: competitionsController,
                     ),
                   ),
                 ),
