@@ -20,6 +20,7 @@ class Competition {
     required this.color,
     this.teamIds = const [],
     this.tournament,
+    this.roundRobinTournament,
   });
 
   final String id;
@@ -28,6 +29,7 @@ class Competition {
   final Color color;
   final List<String> teamIds;
   final KnockoutTournament? tournament;
+  final RoundRobinTournament? roundRobinTournament;
 
   Competition copyWith({
     String? name,
@@ -35,7 +37,9 @@ class Competition {
     Color? color,
     List<String>? teamIds,
     KnockoutTournament? tournament,
+    RoundRobinTournament? roundRobinTournament,
     bool clearTournament = false,
+    bool clearRoundRobinTournament = false,
   }) {
     return Competition(
       id: id,
@@ -44,8 +48,145 @@ class Competition {
       color: color ?? this.color,
       teamIds: teamIds ?? this.teamIds,
       tournament: clearTournament ? null : tournament ?? this.tournament,
+      roundRobinTournament: clearRoundRobinTournament
+          ? null
+          : roundRobinTournament ?? this.roundRobinTournament,
     );
   }
+}
+
+@immutable
+class RoundRobinTournament {
+  const RoundRobinTournament({required this.drawOrder, required this.matches});
+
+  factory RoundRobinTournament.generate(
+    List<String> teamIds, {
+    Random? random,
+  }) {
+    final drawOrder = List<String>.of(teamIds)..shuffle(random);
+    final matches = <RoundRobinMatch>[];
+    for (var first = 0; first < drawOrder.length; first++) {
+      for (var second = first + 1; second < drawOrder.length; second++) {
+        matches.add(
+          RoundRobinMatch(
+            id: 'game-${matches.length}',
+            teamIds: [drawOrder[first], drawOrder[second]],
+          ),
+        );
+      }
+    }
+    return RoundRobinTournament(
+      drawOrder: List.unmodifiable(drawOrder),
+      matches: List.unmodifiable(matches),
+    );
+  }
+
+  final List<String> drawOrder;
+  final List<RoundRobinMatch> matches;
+
+  bool get isComplete => matches.every((match) => match.winnerTeamId != null);
+
+  RoundRobinMatch? get nextMatch {
+    for (final match in matches) {
+      if (match.winnerTeamId == null) return match;
+    }
+    return null;
+  }
+
+  String? get winnerTeamId => isComplete ? standings.first.teamId : null;
+
+  List<RoundRobinStanding> get standings {
+    final wins = {for (final teamId in drawOrder) teamId: 0};
+    for (final match in matches) {
+      final winner = match.winnerTeamId;
+      if (winner != null) wins[winner] = wins[winner]! + 1;
+    }
+    final groups = <int, List<String>>{};
+    for (final teamId in drawOrder) {
+      groups.putIfAbsent(wins[teamId]!, () => []).add(teamId);
+    }
+    final rankedIds = <String>[];
+    for (final winCount
+        in groups.keys.toList()..sort((a, b) => b.compareTo(a))) {
+      final tiedIds = groups[winCount]!;
+      final headToHeadWins = {for (final teamId in tiedIds) teamId: 0};
+      for (final match in matches) {
+        if (tiedIds.contains(match.teamIds.first) &&
+            tiedIds.contains(match.teamIds.last) &&
+            match.winnerTeamId != null) {
+          headToHeadWins[match.winnerTeamId!] =
+              headToHeadWins[match.winnerTeamId!]! + 1;
+        }
+      }
+      tiedIds.sort((first, second) {
+        final headToHead = headToHeadWins[second]!.compareTo(
+          headToHeadWins[first]!,
+        );
+        if (headToHead != 0) return headToHead;
+        return drawOrder.indexOf(first).compareTo(drawOrder.indexOf(second));
+      });
+      rankedIds.addAll(tiedIds);
+    }
+    return List.unmodifiable([
+      for (final teamId in rankedIds)
+        RoundRobinStanding(teamId: teamId, wins: wins[teamId]!),
+    ]);
+  }
+
+  RoundRobinTournament confirmWinner({
+    required String matchId,
+    required String winnerTeamId,
+  }) {
+    RoundRobinMatch? match;
+    for (final candidate in matches) {
+      if (candidate.id == matchId) {
+        match = candidate;
+        break;
+      }
+    }
+    if (match == null ||
+        match.winnerTeamId != null ||
+        !match.teamIds.contains(winnerTeamId)) {
+      return this;
+    }
+    return RoundRobinTournament(
+      drawOrder: drawOrder,
+      matches: List.unmodifiable([
+        for (final candidate in matches)
+          if (candidate.id == matchId)
+            candidate.copyWith(winnerTeamId: winnerTeamId)
+          else
+            candidate,
+      ]),
+    );
+  }
+}
+
+@immutable
+class RoundRobinMatch {
+  const RoundRobinMatch({
+    required this.id,
+    required this.teamIds,
+    this.winnerTeamId,
+  });
+
+  final String id;
+  final List<String> teamIds;
+  final String? winnerTeamId;
+
+  RoundRobinMatch copyWith({String? winnerTeamId}) => RoundRobinMatch(
+    id: id,
+    teamIds: teamIds,
+    winnerTeamId: winnerTeamId ?? this.winnerTeamId,
+  );
+}
+
+@immutable
+class RoundRobinStanding {
+  const RoundRobinStanding({required this.teamId, required this.wins});
+
+  final String teamId;
+  final int wins;
 }
 
 @immutable

@@ -7,6 +7,7 @@ import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
 import '../domain/competition.dart';
 import 'widgets/knockout_tournament_tab.dart';
+import 'widgets/round_robin_tournament_tab.dart';
 
 class CompetitionDetailsPage extends StatelessWidget {
   const CompetitionDetailsPage({
@@ -72,28 +73,45 @@ class CompetitionDetailsPage extends StatelessWidget {
                     avatarKey: const Key('competition-avatar'),
                     iconKey: const Key('competition-details-icon'),
                     topPadding: 0,
-                    cardTopMargin: 24,
+                    cardTopMargin: 18,
                     additionalContent: _CompetitionInformation(
                       competition: competition,
                       assignedTeams: assignedTeams,
                       onManageTeams: () => _manageTeams(context, competition),
                       onGenerateTournament: () =>
-                          controller.generateKnockoutTournament(competition.id),
+                          competition.mode == TournamentMode.knockout
+                          ? controller.generateKnockoutTournament(
+                              competition.id,
+                            )
+                          : controller.generateRoundRobinTournament(
+                              competition.id,
+                            ),
                     ),
                     onEdit: () => _editCompetition(context, competition),
                     onDelete: () => _deleteCompetition(context, competition),
                   ),
                 ),
-                KnockoutTournamentTab(
-                  competition: competition,
-                  teams: assignedTeams,
-                  onConfirmWinner: (matchId, winnerTeamId) =>
-                      controller.confirmKnockoutMatchWinner(
-                        competitionId: competition.id,
-                        matchId: matchId,
-                        winnerTeamId: winnerTeamId,
+                competition.mode == TournamentMode.knockout
+                    ? KnockoutTournamentTab(
+                        competition: competition,
+                        teams: assignedTeams,
+                        onConfirmWinner: (matchId, winnerTeamId) =>
+                            controller.confirmKnockoutMatchWinner(
+                              competitionId: competition.id,
+                              matchId: matchId,
+                              winnerTeamId: winnerTeamId,
+                            ),
+                      )
+                    : RoundRobinTournamentTab(
+                        competition: competition,
+                        teams: assignedTeams,
+                        onConfirmWinner: (matchId, winnerTeamId) =>
+                            controller.confirmRoundRobinMatchWinner(
+                              competitionId: competition.id,
+                              matchId: matchId,
+                              winnerTeamId: winnerTeamId,
+                            ),
                       ),
-                ),
               ],
             ),
           ),
@@ -242,29 +260,38 @@ class _CompetitionInformation extends StatelessWidget {
                 .toList(),
           ),
         const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            onPressed: onManageTeams,
-            icon: const Icon(Icons.groups_outlined),
-            label: const Text('Add or remove teams'),
-          ),
+        OutlinedButton.icon(
+          onPressed: onManageTeams,
+          icon: const Icon(Icons.groups_outlined),
+          label: const Text('Manage teams'),
         ),
-        if (competition.mode == TournamentMode.knockout) ...[
-          if (competition.tournament == null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton.icon(
-                onPressed: assignedTeams.length >= 2
-                    ? onGenerateTournament
-                    : null,
-                icon: const Icon(Icons.account_tree_outlined),
-                label: const Text('Generate tournament'),
+        if (competition.mode == TournamentMode.knockout ||
+            competition.mode == TournamentMode.roundRobin) ...[
+          const SizedBox(height: 12),
+          if ((competition.mode == TournamentMode.knockout &&
+                  competition.tournament == null) ||
+              (competition.mode == TournamentMode.roundRobin &&
+                  competition.roundRobinTournament == null))
+            FilledButton.icon(
+              onPressed: assignedTeams.length >= 2
+                  ? onGenerateTournament
+                  : null,
+              icon: Icon(
+                competition.mode == TournamentMode.knockout
+                    ? Icons.account_tree_outlined
+                    : Icons.leaderboard_outlined,
               ),
+              label: const Text('Generate tournament'),
             )
           else
-            const Text('Tournament bracket generated'),
-          if (assignedTeams.length < 2 && competition.tournament == null)
+            Text(
+              competition.mode == TournamentMode.knockout
+                  ? 'Tournament bracket generated'
+                  : 'Round-robin games generated',
+            ),
+          if (assignedTeams.length < 2 &&
+              competition.tournament == null &&
+              competition.roundRobinTournament == null)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(

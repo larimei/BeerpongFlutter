@@ -53,6 +53,8 @@ class CompetitionsController extends ChangeNotifier {
       currentCompetition.copyWith(
         teamIds: List.unmodifiable(teamIds.toSet()),
         clearTournament: currentCompetition.tournament != null,
+        clearRoundRobinTournament:
+            currentCompetition.roundRobinTournament != null,
       ),
     );
     _refresh();
@@ -70,6 +72,25 @@ class CompetitionsController extends ChangeNotifier {
     _repository.update(
       competition.copyWith(
         tournament: KnockoutTournament.generate(competition.teamIds),
+      ),
+    );
+    _refresh();
+    return true;
+  }
+
+  bool generateRoundRobinTournament(String competitionId) {
+    final competition = _repository.getById(competitionId);
+    if (competition == null ||
+        competition.mode != TournamentMode.roundRobin ||
+        competition.teamIds.length < 2 ||
+        competition.roundRobinTournament != null) {
+      return false;
+    }
+    _repository.update(
+      competition.copyWith(
+        roundRobinTournament: RoundRobinTournament.generate(
+          competition.teamIds,
+        ),
       ),
     );
     _refresh();
@@ -98,6 +119,30 @@ class CompetitionsController extends ChangeNotifier {
     return true;
   }
 
+  bool confirmRoundRobinMatchWinner({
+    required String competitionId,
+    required String matchId,
+    required String winnerTeamId,
+  }) {
+    final competition = _repository.getById(competitionId);
+    final tournament = competition?.roundRobinTournament;
+    if (competition == null ||
+        competition.mode != TournamentMode.roundRobin ||
+        tournament == null) {
+      return false;
+    }
+    final updatedTournament = tournament.confirmWinner(
+      matchId: matchId,
+      winnerTeamId: winnerTeamId,
+    );
+    if (identical(updatedTournament, tournament)) return false;
+    _repository.update(
+      competition.copyWith(roundRobinTournament: updatedTournament),
+    );
+    _refresh();
+    return true;
+  }
+
   bool updateCompetition({
     required String id,
     required String name,
@@ -113,6 +158,7 @@ class CompetitionsController extends ChangeNotifier {
         mode: mode,
         color: color,
         clearTournament: mode != TournamentMode.knockout,
+        clearRoundRobinTournament: mode != TournamentMode.roundRobin,
       ),
     );
     _refresh();
@@ -128,6 +174,7 @@ class CompetitionsController extends ChangeNotifier {
             competition.teamIds.where((id) => id != teamId),
           ),
           clearTournament: competition.tournament != null,
+          clearRoundRobinTournament: competition.roundRobinTournament != null,
         ),
       );
     }

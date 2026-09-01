@@ -251,8 +251,8 @@ void main() {
     expect(find.text('Confirm winner'), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Confirm winner').last,
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Confirm winner').last,
           )
           .onPressed,
       isNull,
@@ -261,7 +261,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Confirm winner'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Winner:'), findsNWidgets(2));
+    expect(find.textContaining('Winner:'), findsOneWidget);
     expect(
       controller.competitions
           .firstWhere((competition) => competition.id == 'summer-cup')
@@ -320,7 +320,7 @@ void main() {
       [Colors.red, Colors.blue],
     );
 
-    await tester.tap(find.text('Add or remove teams'));
+    await tester.tap(find.text('Manage teams'));
     await tester.pumpAndSettle();
     expect(find.byType(CheckboxListTile), findsNothing);
     expect(find.byTooltip('Remove Red Rockets'), findsOneWidget);
@@ -330,7 +330,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.competitions.first.teamIds, ['team-1', 'team-2']);
 
-    await tester.tap(find.text('Add or remove teams'));
+    await tester.tap(find.text('Manage teams'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Remove Red Rockets'));
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));

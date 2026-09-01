@@ -136,6 +136,19 @@ Map<String, Object> _competitionToJson(Competition competition) => {
           )
           .toList(),
     },
+  if (competition.roundRobinTournament != null)
+    'roundRobinTournament': {
+      'drawOrder': competition.roundRobinTournament!.drawOrder,
+      'matches': competition.roundRobinTournament!.matches
+          .map(
+            (match) => {
+              'id': match.id,
+              'teamIds': match.teamIds,
+              'winnerTeamId': match.winnerTeamId,
+            },
+          )
+          .toList(),
+    },
 };
 
 typedef _JsonDecoder<T> = T? Function(Map<String, dynamic> json);
@@ -214,6 +227,13 @@ Competition? _competitionFromJson(Map<String, dynamic> json) {
   if (tournamentMode == null) return null;
   final tournament = _tournamentFromJson(json['tournament']);
   if (json.containsKey('tournament') && tournament == null) return null;
+  final roundRobinTournament = _roundRobinTournamentFromJson(
+    json['roundRobinTournament'],
+  );
+  if (json.containsKey('roundRobinTournament') &&
+      roundRobinTournament == null) {
+    return null;
+  }
   return Competition(
     id: id,
     name: name,
@@ -221,6 +241,38 @@ Competition? _competitionFromJson(Map<String, dynamic> json) {
     color: Color(color),
     teamIds: teamIds,
     tournament: tournament,
+    roundRobinTournament: roundRobinTournament,
+  );
+}
+
+RoundRobinTournament? _roundRobinTournamentFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is! Map) return null;
+  final json = Map<String, dynamic>.from(value);
+  final drawOrder = _stringList(json['drawOrder']);
+  final rawMatches = json['matches'];
+  if (drawOrder == null || rawMatches is! List) return null;
+  final matches = <RoundRobinMatch>[];
+  for (final rawMatch in rawMatches) {
+    if (rawMatch is! Map) return null;
+    final match = Map<String, dynamic>.from(rawMatch);
+    final id = match['id'];
+    final teamIds = _stringList(match['teamIds']);
+    final winner = match['winnerTeamId'];
+    if (id is! String ||
+        teamIds == null ||
+        teamIds.length != 2 ||
+        (winner != null && winner is! String)) {
+      return null;
+    }
+    matches.add(
+      RoundRobinMatch(id: id, teamIds: teamIds, winnerTeamId: winner),
+    );
+  }
+  if (matches.isEmpty) return null;
+  return RoundRobinTournament(
+    drawOrder: drawOrder,
+    matches: List.unmodifiable(matches),
   );
 }
 
