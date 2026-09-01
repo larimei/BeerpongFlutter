@@ -34,21 +34,13 @@ class AddTeamForm extends StatefulWidget {
 }
 
 class _AddTeamFormState extends State<AddTeamForm> {
-  final Set<String> _selectedPlayerIds = {};
+  Set<String> _selectedPlayerIds = {};
   late final Future<String> _initialName;
 
   @override
   void initState() {
     super.initState();
     _initialName = TeamNameGenerator().randomName();
-  }
-
-  void _togglePlayer(String playerId) {
-    setState(() {
-      if (!_selectedPlayerIds.remove(playerId)) {
-        _selectedPlayerIds.add(playerId);
-      }
-    });
   }
 
   @override
@@ -74,14 +66,18 @@ class _AddTeamFormState extends State<AddTeamForm> {
       iconKey: const Key('add-team-icon'),
       colorPickerIconKey: const Key('color-picker-team-icon'),
       colorPickerWheelKey: const Key('team-color-wheel'),
-      additionalFields: EntitySelection<Player>(
-        label: 'Players',
+      additionalFields: EntitySelectionField<Player>(
+        manageLabel: 'Manage players',
+        icon: Icons.group_add_outlined,
+        dialogTitle: 'Manage players',
+        selectionLabel: 'Players',
         items: widget.players,
         selectedIds: _selectedPlayerIds,
         idOf: (player) => player.id,
         nameOf: (player) => player.name,
         emptyMessage: 'No players available. Add players first.',
-        onToggle: _togglePlayer,
+        onChanged: (playerIds) =>
+            setState(() => _selectedPlayerIds = playerIds),
       ),
       onSubmit: (team) => widget.onSubmit(
         NewTeam(

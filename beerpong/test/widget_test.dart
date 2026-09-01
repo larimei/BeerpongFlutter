@@ -28,12 +28,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Add team'), findsOneWidget);
     expect(find.text('Add player'), findsNothing);
+    expect(find.text('No players available. Add players first.'), findsNothing);
+    await tester.tap(find.text('Manage players'));
+    await tester.pumpAndSettle();
     expect(
       find.text('No players available. Add players first.'),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.emoji_events_outlined));
     await tester.pumpAndSettle();

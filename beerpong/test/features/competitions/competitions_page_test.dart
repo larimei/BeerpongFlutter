@@ -31,8 +31,16 @@ void main() {
 
     expect(
       find.text('No teams available. You can add teams later.'),
+      findsNothing,
+    );
+    await tester.tap(find.text('Add or remove teams'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('No teams available. You can add teams later.'),
       findsOneWidget,
     );
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'Empty Cup');
     await _tapAdd(tester);
     expect(submittedCompetition?.teamIds, isEmpty);
@@ -63,11 +71,18 @@ void main() {
       ),
     );
 
+    expect(find.text('Red Rockets'), findsNothing);
+    expect(find.text('Blue Birds'), findsNothing);
+    await tester.tap(find.text('Add or remove teams'));
+    await tester.pumpAndSettle();
     expect(find.text('Red Rockets'), findsOneWidget);
     expect(find.text('Blue Birds'), findsOneWidget);
     expect(find.byType(CheckboxListTile), findsNothing);
     expect(find.byTooltip('Add Red Rockets'), findsOneWidget);
     await tester.tap(find.byTooltip('Add Red Rockets'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Red Rockets'), findsNothing);
     await tester.enterText(find.byType(TextFormField), 'Selected Cup');
     await _tapAdd(tester);
     expect(submittedCompetition?.teamIds, ['team-1']);

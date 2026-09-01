@@ -56,6 +56,58 @@ class EntitySelection<T> extends StatelessWidget {
   }
 }
 
+class EntitySelectionField<T> extends StatelessWidget {
+  const EntitySelectionField({
+    required this.manageLabel,
+    required this.icon,
+    required this.dialogTitle,
+    required this.selectionLabel,
+    required this.items,
+    required this.selectedIds,
+    required this.idOf,
+    required this.nameOf,
+    required this.emptyMessage,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String manageLabel;
+  final IconData icon;
+  final String dialogTitle;
+  final String selectionLabel;
+  final List<T> items;
+  final Set<String> selectedIds;
+  final String Function(T item) idOf;
+  final String Function(T item) nameOf;
+  final String emptyMessage;
+  final ValueChanged<Set<String>> onChanged;
+
+  Future<void> _manage(BuildContext context) async {
+    final savedIds = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => EntitySelectionDialog<T>(
+        title: dialogTitle,
+        label: selectionLabel,
+        items: items,
+        initialIds: selectedIds,
+        idOf: idOf,
+        nameOf: nameOf,
+        emptyMessage: emptyMessage,
+      ),
+    );
+    if (savedIds != null) onChanged(savedIds.toSet());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () => _manage(context),
+      icon: Icon(icon),
+      label: Text(manageLabel),
+    );
+  }
+}
+
 class EntitySelectionDialog<T> extends StatefulWidget {
   const EntitySelectionDialog({
     required this.title,

@@ -37,13 +37,7 @@ class AddCompetitionForm extends StatefulWidget {
 
 class _AddCompetitionFormState extends State<AddCompetitionForm> {
   TournamentMode _selectedMode = TournamentMode.knockout;
-  final Set<String> _selectedTeamIds = {};
-
-  void _toggleTeam(String teamId) {
-    setState(() {
-      if (!_selectedTeamIds.remove(teamId)) _selectedTeamIds.add(teamId);
-    });
-  }
+  Set<String> _selectedTeamIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -79,14 +73,17 @@ class _AddCompetitionFormState extends State<AddCompetitionForm> {
             },
           ),
           const SizedBox(height: 24),
-          EntitySelection<Team>(
-            label: 'Teams',
+          EntitySelectionField<Team>(
+            manageLabel: 'Add or remove teams',
+            icon: Icons.groups_outlined,
+            dialogTitle: 'Add or remove teams',
+            selectionLabel: 'Teams',
             items: widget.teams,
             selectedIds: _selectedTeamIds,
             idOf: (team) => team.id,
             nameOf: (team) => team.name,
             emptyMessage: 'No teams available. You can add teams later.',
-            onToggle: _toggleTeam,
+            onChanged: (teamIds) => setState(() => _selectedTeamIds = teamIds),
           ),
         ],
       ),

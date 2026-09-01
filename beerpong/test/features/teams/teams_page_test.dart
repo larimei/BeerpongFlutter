@@ -17,6 +17,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('adds a team and shows its details', (tester) async {
     await tester.pumpWidget(const BeerpongApp());
+    await tester.tap(find.byTooltip('Add'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Alice');
+    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byIcon(Icons.groups_outlined));
     await tester.pumpAndSettle();
     expect(find.text('No teams yet'), findsOneWidget);
@@ -27,6 +33,14 @@ void main() {
     final nameField = tester.widget<TextFormField>(find.byType(TextFormField));
     expect(nameField.controller?.text, isNotEmpty);
     await tester.enterText(find.byType(TextFormField), 'Champions');
+    expect(find.text('Alice'), findsNothing);
+    await tester.tap(find.text('Manage players'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Add Alice'), findsOneWidget);
+    await tester.tap(find.byTooltip('Add Alice'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Alice'), findsNothing);
     await tester.tap(find.widgetWithText(FilledButton, 'Add'));
     await tester.pumpAndSettle();
 
@@ -34,7 +48,8 @@ void main() {
     await tester.tap(find.text('Champions'));
     await tester.pumpAndSettle();
     expect(find.text('Team details'), findsOneWidget);
-    expect(find.text('No players in this team'), findsOneWidget);
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('No players in this team'), findsNothing);
     expect(find.text('Won games'), findsOneWidget);
     expect(find.text('Lost games'), findsOneWidget);
     expect(find.text('Delete team'), findsOneWidget);
