@@ -132,6 +132,9 @@ void main() {
     expect(memberRowSpacing, inExclusiveRange(0, 24));
     expect(find.text('4 players'), findsOneWidget);
     expect(find.text('missing'), findsNothing);
+    expect(tester.widget<Text>(find.text('Empty team')).style?.fontSize, 16);
+    expect(tester.widget<Text>(find.text('Alice')).style?.fontSize, 12);
+    expect(tester.widget<Text>(find.text('4 players')).style?.fontSize, 12);
     expect(tester.takeException(), isNull);
   });
 
@@ -439,7 +442,7 @@ void main() {
     expect(find.byType(Chip), findsOneWidget);
   });
 
-  testWidgets('competition cards show only their name and icon', (
+  testWidgets('competition cards update valid team metadata after deletion', (
     tester,
   ) async {
     const deletedTeam = Team(
@@ -467,13 +470,18 @@ void main() {
     addTearDown(teamsController.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(home: CompetitionsPage(controller: competitionsController)),
+      MaterialApp(
+        home: CompetitionsPage(
+          controller: competitionsController,
+          teams: teamsController.teams,
+        ),
+      ),
     );
     var card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
-    expect(card.additionalContent, isNull);
-    expect(find.text('Knockout - 2 teams'), findsNothing);
+    expect(card.additionalContent, isA<EntityCardText>());
+    expect(find.text('Knockout · 1 team'), findsOneWidget);
 
     teamsController.deleteTeam(deletedTeam.id);
     await tester.pump();
@@ -481,7 +489,7 @@ void main() {
     card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
-    expect(card.additionalContent, isNull);
-    expect(find.text('Knockout - 1 team'), findsNothing);
+    expect(card.additionalContent, isA<EntityCardText>());
+    expect(find.text('Knockout · 0 teams'), findsOneWidget);
   });
 }

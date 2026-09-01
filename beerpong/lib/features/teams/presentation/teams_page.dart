@@ -75,8 +75,7 @@ class _TeamMemberSummary extends StatelessWidget {
     if (players.isEmpty) {
       return EntityCardText(
         text: 'No players',
-        preferredFontSize: 14,
-        minimumFontSize: 12,
+        fontSize: 12,
         maxLines: 1,
         style: style,
       );
@@ -84,8 +83,7 @@ class _TeamMemberSummary extends StatelessWidget {
     if (players.length > 2) {
       return EntityCardText(
         text: '${players.length} players',
-        preferredFontSize: 14,
-        minimumFontSize: 12,
+        fontSize: 12,
         maxLines: 1,
         style: style,
       );
@@ -94,12 +92,13 @@ class _TeamMemberSummary extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: players
           .map(
-            (player) => EntityCardText(
-              text: player.name,
-              preferredFontSize: 14,
-              minimumFontSize: 12,
-              maxLines: 1,
-              style: style,
+            (player) => Flexible(
+              child: EntityCardText(
+                text: player.name,
+                fontSize: 12,
+                maxLines: 1,
+                style: style,
+              ),
             ),
           )
           .toList(),

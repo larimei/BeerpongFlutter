@@ -27,6 +27,7 @@ class CompetitionsPage extends StatelessWidget {
         animation: controller,
         builder: (context, child) {
           final competitions = controller.competitions;
+          final existingTeamIds = teams.map((team) => team.id).toSet();
           if (competitions.isEmpty) return const _EmptyCompetitions();
           return GridView.builder(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
@@ -39,10 +40,22 @@ class CompetitionsPage extends StatelessWidget {
             itemCount: competitions.length,
             itemBuilder: (context, index) {
               final competition = competitions[index];
+              final teamCount = competition.teamIds
+                  .toSet()
+                  .intersection(existingTeamIds)
+                  .length;
               return EntityCard(
                 name: competition.name,
                 color: competition.color,
                 icon: Icons.emoji_events_outlined,
+                additionalContent: EntityCardText(
+                  text:
+                      '${competition.mode.label} · $teamCount '
+                      '${teamCount == 1 ? 'team' : 'teams'}',
+                  fontSize: 12,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(

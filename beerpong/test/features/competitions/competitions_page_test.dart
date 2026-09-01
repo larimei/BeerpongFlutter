@@ -139,13 +139,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsOneWidget);
-    expect(find.text('Knockout - 0 teams'), findsNothing);
+    expect(find.text('Knockout · 0 teams'), findsOneWidget);
     final card = tester.widget<EntityCard>(
       find.widgetWithText(EntityCard, 'First Cup'),
     );
     expect(card.color, const Color(0xFFFFD95A));
     expect(card.icon, Icons.emoji_events_outlined);
-    expect(card.additionalContent, isNull);
+    expect(card.additionalContent, isA<EntityCardText>());
     expect(card.onTap, isNotNull);
     final cardSize = tester.getSize(find.byType(EntityCard));
     expect(cardSize.width, cardSize.height);
@@ -166,8 +166,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('First Cup'), findsNWidgets(2));
-    expect(find.text('Knockout - 0 teams'), findsNothing);
-    expect(find.text('Round robin - 0 teams'), findsNothing);
+    expect(find.text('Knockout · 0 teams'), findsOneWidget);
+    expect(find.text('Round robin · 0 teams'), findsOneWidget);
   });
 
   testWidgets('empty state and add form remain usable on mobile web', (
@@ -231,7 +231,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Knockout - 2 teams'), findsNothing);
+    expect(find.text('Knockout · 2 teams'), findsOneWidget);
     await tester.tap(find.text('Summer Cup'));
     await tester.pumpAndSettle();
     expect(find.text('Red Rockets'), findsOneWidget);
@@ -266,7 +266,102 @@ void main() {
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('Knockout - 1 team'), findsNothing);
+    expect(find.text('Knockout · 1 team'), findsOneWidget);
+  });
+
+  testWidgets('cards show mode and count only existing assigned teams', (
+    tester,
+  ) async {
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'knockout',
+          name: 'Knockout Cup',
+          mode: TournamentMode.knockout,
+          color: Colors.amber,
+          teamIds: ['team-1', 'missing-team'],
+        ),
+        Competition(
+          id: 'round-robin',
+          name: 'League Cup',
+          mode: TournamentMode.roundRobin,
+          color: Colors.blue,
+          teamIds: ['team-1', 'team-2'],
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
+    );
+
+    expect(find.text('Knockout · 1 team'), findsOneWidget);
+    expect(find.text('Round robin · 2 teams'), findsOneWidget);
+    expect(find.textContaining('missing-team'), findsNothing);
+    expect(tester.widget<Text>(find.text('Knockout Cup')).style?.fontSize, 16);
+    expect(
+      tester.widget<Text>(find.text('Knockout · 1 team')).style?.fontSize,
+      12,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long competition names stay accessible on narrow scaled cards', (
+    tester,
+  ) async {
+    const longName = 'The Extraordinary International Championship Competition';
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'long-cup',
+          name: longName,
+          mode: TournamentMode.roundRobin,
+          color: Colors.amber,
+          teamIds: ['team-1', 'team-2'],
+        ),
+        Competition(
+          id: 'short-cup',
+          name: 'Short Cup',
+          mode: TournamentMode.knockout,
+          color: Colors.blue,
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
+    );
+
+    final cards = find.byType(EntityCard);
+    expect(cards, findsNWidgets(2));
+    final cardSize = tester.getSize(cards.first);
+    expect(cardSize.width, cardSize.height);
+    expect(tester.getSize(cards.last), cardSize);
+    expect(find.byTooltip(longName), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape(longName))),
+      findsOneWidget,
+    );
+    expect(find.text('Round robin · 2 teams'), findsOneWidget);
+    expect(find.text('Knockout · 0 teams'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 
   testWidgets('validates, cancels, and saves competition edits', (

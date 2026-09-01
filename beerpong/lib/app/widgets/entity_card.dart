@@ -38,10 +38,10 @@ class EntityCard extends StatelessWidget {
               children: [
                 Icon(icon, size: 40),
                 SizedBox(height: additionalContent == null ? 12 : 6),
-                Flexible(child: EntityCardText(text: name)),
+                Expanded(child: EntityCardText(text: name)),
                 if (additionalContent != null) ...[
                   const SizedBox(height: 4),
-                  Flexible(flex: 2, child: additionalContent!),
+                  Expanded(flex: 2, child: additionalContent!),
                 ],
               ],
             ),
@@ -55,16 +55,14 @@ class EntityCard extends StatelessWidget {
 class EntityCardText extends StatelessWidget {
   const EntityCardText({
     required this.text,
-    this.preferredFontSize = 18,
-    this.minimumFontSize = 14,
+    this.fontSize = 16,
     this.maxLines = 2,
     this.style,
     super.key,
   });
 
   final String text;
-  final double preferredFontSize;
-  final double minimumFontSize;
+  final double fontSize;
   final int maxLines;
   final TextStyle? style;
 
@@ -77,19 +75,6 @@ class EntityCardText extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        var fontSize = preferredFontSize;
-        while (fontSize > minimumFontSize &&
-            !_fits(
-              style: baseStyle?.copyWith(fontSize: fontSize),
-              textScaler: textScaler,
-              textDirection: textDirection,
-              locale: locale,
-              maxWidth: constraints.maxWidth,
-              maxHeight: constraints.maxHeight,
-            )) {
-          fontSize--;
-        }
-
         final style = baseStyle?.copyWith(fontSize: fontSize);
         final lineHeight = _lineHeight(
           style: style,

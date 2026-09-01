@@ -68,7 +68,7 @@ void main() {
       final nameText = tester.widget<Text>(find.text(longName));
       expect(nameText.maxLines, lessThanOrEqualTo(2));
       expect(nameText.overflow, TextOverflow.ellipsis);
-      expect(nameText.style?.fontSize, 14);
+      expect(nameText.style?.fontSize, 16);
       expect(find.byTooltip(longName), findsOneWidget);
       expect(find.bySemanticsLabel(longName), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -79,7 +79,7 @@ void main() {
       expect(cardSize.width, cardSize.height);
       expect(tester.getSize(cardFinder.last), cardSize);
       final shortNameText = tester.widget<Text>(find.text('Lara'));
-      expect(shortNameText.style?.fontSize, 18);
+      expect(shortNameText.style?.fontSize, 16);
       expect(find.byTooltip('Lara'), findsNothing);
       expect(tester.takeException(), isNull);
       semantics.dispose();

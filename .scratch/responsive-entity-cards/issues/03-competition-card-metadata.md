@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Overflow-sichere Player-Card als gemeinsame Card-Basis.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Jede Competition-Card zeigt das vorhandene englische Modus-Label.
 - [ ] Jede Competition-Card zeigt die Anzahl der aktuell existierenden zugehörigen Teams als englischen Text.
@@ -13,3 +13,12 @@
 - [ ] Competition-Name und Metazeile überschreiten niemals die Card-Grenzen, auch nicht auf einem schmalen Display oder bei erhöhter Systemschrift.
 - [ ] Ein gekürzter Competition-Name verwendet `…` und bleibt per Tooltip und Screenreader vollständig zugänglich.
 - [ ] Widget-Tests sichern lange Namen, beide Competition-Modi, unterschiedliche Teamanzahlen, ein schmales Display und das Ausbleiben von Layout-Ausnahmen ab.
+
+## Answer
+
+Competition-Cards zeigen jetzt eine kompakte Metazeile im Format
+`Round robin · 8 teams`. Die Anzahl beruecksichtigt nur aktuell existierende,
+zugeordnete Teams. Die gemeinsame Card-Basis begrenzt Name und Metadaten auch
+bei schmalen Cards und grosser Systemschrift; gekuerzte Namen bleiben per
+Tooltip und Semantics zugaenglich. Widget-Tests decken beide Modi,
+Singular/Plural, verwaiste Zuordnungen und das responsive Layout ab.
