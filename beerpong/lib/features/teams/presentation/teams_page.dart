@@ -10,11 +10,13 @@ class TeamsPage extends StatelessWidget {
   const TeamsPage({
     required this.controller,
     required this.playersController,
+    this.onOpenSettings,
     super.key,
   });
 
   final TeamsController controller;
   final PlayersController playersController;
+  final VoidCallback? onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,13 @@ class TeamsPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF0FAF9),
         title: const Text('Teams'),
+        actions: [
+          IconButton(
+            onPressed: onOpenSettings,
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
       body: ListenableBuilder(
         listenable: Listenable.merge([controller, playersController]),

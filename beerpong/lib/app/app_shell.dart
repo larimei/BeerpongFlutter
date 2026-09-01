@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../features/competitions/application/competitions_controller.dart';
@@ -11,11 +13,16 @@ import '../features/teams/presentation/teams_page.dart';
 import '../features/teams/application/teams_controller.dart';
 import '../features/teams/data/team_repository.dart';
 import '../features/teams/presentation/widgets/add_team_form.dart';
+import 'data/app_state_store.dart';
+import 'presentation/settings_page.dart';
 import 'widgets/entity_add_form.dart';
 import 'widgets/global_add_overlay.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, required this.snapshot, required this.store});
+
+  final AppSnapshot snapshot;
+  final BrowserAppStateStore store;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -34,21 +41,33 @@ class _AppShellState extends State<AppShell> {
   late final PlayersController _playersController;
   late final TeamsController _teamsController;
   late final CompetitionsController _competitionsController;
+  late final InMemoryPlayerRepository _playerRepository;
+  late final InMemoryTeamRepository _teamRepository;
+  late final InMemoryCompetitionRepository _competitionRepository;
   int _selectedIndex = 0;
+  bool _suspendPersistence = false;
 
   @override
   void initState() {
     super.initState();
+    _competitionRepository = InMemoryCompetitionRepository(
+      widget.snapshot.competitions,
+    );
+    _teamRepository = InMemoryTeamRepository(widget.snapshot.teams);
+    _playerRepository = InMemoryPlayerRepository(widget.snapshot.players);
     _competitionsController = CompetitionsController(
-      InMemoryCompetitionRepository(),
+      _competitionRepository,
+      onChanged: _persist,
     );
     _teamsController = TeamsController(
-      InMemoryTeamRepository(),
+      _teamRepository,
       _competitionsController,
+      onChanged: _persist,
     );
     _playersController = PlayersController(
-      InMemoryPlayerRepository(),
+      _playerRepository,
       _teamsController,
+      onChanged: _persist,
     );
   }
 
@@ -61,6 +80,35 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _selectPage(int index) => setState(() => _selectedIndex = index);
+
+  void _persist() {
+    if (_suspendPersistence) return;
+    unawaited(
+      widget.store.save(
+        AppSnapshot(
+          players: _playerRepository.getAll(),
+          teams: _teamRepository.getAll(),
+          competitions: _competitionRepository.getAll(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _clearLocalData() async {
+    _suspendPersistence = true;
+    _playersController.clear();
+    _teamsController.clear();
+    _competitionsController.clear();
+    _suspendPersistence = false;
+    await widget.store.clear();
+    if (mounted) setState(() => _selectedIndex = 0);
+  }
+
+  Future<void> _openSettings() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => SettingsPage(onClearLocalData: _clearLocalData),
+    ),
+  );
 
   Future<void> _showGlobalAddOverlay() async {
     final target = GlobalAddTarget.values[_selectedIndex];
@@ -107,14 +155,19 @@ class _AppShellState extends State<AppShell> {
         final content = IndexedStack(
           index: _selectedIndex,
           children: [
-            PlayersPage(controller: _playersController),
+            PlayersPage(
+              controller: _playersController,
+              onOpenSettings: _openSettings,
+            ),
             TeamsPage(
               controller: _teamsController,
               playersController: _playersController,
+              onOpenSettings: _openSettings,
             ),
             CompetitionsPage(
               controller: _competitionsController,
               teams: _teamsController.teams,
+              onOpenSettings: _openSettings,
             ),
           ],
         );

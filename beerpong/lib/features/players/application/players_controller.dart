@@ -5,11 +5,16 @@ import '../data/player_repository.dart';
 import '../domain/player.dart';
 
 class PlayersController extends ChangeNotifier {
-  PlayersController(this._repository, this._teamsController)
-    : _players = _repository.getAll();
+  PlayersController(
+    this._repository,
+    this._teamsController, {
+    VoidCallback? onChanged,
+  }) : _onChanged = onChanged ?? _doNothing,
+       _players = _repository.getAll();
 
   final PlayerRepository _repository;
   final TeamsController _teamsController;
+  final VoidCallback _onChanged;
   List<Player> _players;
   int _nextId = 0;
 
@@ -47,6 +52,11 @@ class PlayersController extends ChangeNotifier {
     _refresh();
   }
 
+  void clear() {
+    _repository.clear();
+    _refresh();
+  }
+
   bool updatePlayer({
     required String id,
     required String name,
@@ -63,6 +73,9 @@ class PlayersController extends ChangeNotifier {
 
   void _refresh() {
     _players = _repository.getAll();
+    _onChanged();
     notifyListeners();
   }
 }
+
+void _doNothing() {}

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'app_shell.dart';
+import 'data/app_state_store.dart';
 
 class BeerpongApp extends StatelessWidget {
-  const BeerpongApp({super.key});
+  const BeerpongApp({
+    super.key,
+    this.snapshot = const AppSnapshot.empty(),
+    this.store = const BrowserAppStateStore(),
+  });
+
+  final AppSnapshot snapshot;
+  final BrowserAppStateStore store;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +24,7 @@ class BeerpongApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AppShell(),
+      home: AppShell(snapshot: snapshot, store: store),
     );
   }
 }

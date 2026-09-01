@@ -9,11 +9,13 @@ class CompetitionsPage extends StatelessWidget {
   const CompetitionsPage({
     required this.controller,
     this.teams = const [],
+    this.onOpenSettings,
     super.key,
   });
 
   final CompetitionsController controller;
   final List<Team> teams;
+  final VoidCallback? onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,13 @@ class CompetitionsPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF0FAF9),
         title: const Text('Competitions'),
+        actions: [
+          IconButton(
+            onPressed: onOpenSettings,
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
       body: AnimatedBuilder(
         animation: controller,

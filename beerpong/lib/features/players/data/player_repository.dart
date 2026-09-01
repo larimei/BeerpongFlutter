@@ -10,6 +10,8 @@ abstract interface class PlayerRepository {
   void update(Player player);
 
   void delete(String id);
+
+  void clear();
 }
 
 class InMemoryPlayerRepository implements PlayerRepository {
@@ -40,4 +42,7 @@ class InMemoryPlayerRepository implements PlayerRepository {
 
   @override
   void delete(String id) => _players.removeWhere((player) => player.id == id);
+
+  @override
+  void clear() => _players.clear();
 }

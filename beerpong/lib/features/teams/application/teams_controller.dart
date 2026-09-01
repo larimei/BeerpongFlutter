@@ -5,11 +5,16 @@ import '../data/team_repository.dart';
 import '../domain/team.dart';
 
 class TeamsController extends ChangeNotifier {
-  TeamsController(this._repository, this._competitionsController)
-    : _teams = _repository.getAll();
+  TeamsController(
+    this._repository,
+    this._competitionsController, {
+    VoidCallback? onChanged,
+  }) : _onChanged = onChanged ?? _doNothing,
+       _teams = _repository.getAll();
 
   final TeamRepository _repository;
   final CompetitionsController _competitionsController;
+  final VoidCallback _onChanged;
   List<Team> _teams;
   int _nextId = 0;
 
@@ -82,8 +87,16 @@ class TeamsController extends ChangeNotifier {
     _refresh();
   }
 
+  void clear() {
+    _repository.clear();
+    _refresh();
+  }
+
   void _refresh() {
     _teams = _repository.getAll();
+    _onChanged();
     notifyListeners();
   }
 }
+
+void _doNothing() {}

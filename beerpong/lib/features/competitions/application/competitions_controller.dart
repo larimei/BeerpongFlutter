@@ -4,10 +4,12 @@ import '../data/competition_repository.dart';
 import '../domain/competition.dart';
 
 class CompetitionsController extends ChangeNotifier {
-  CompetitionsController(this._repository)
-    : _competitions = _repository.getAll();
+  CompetitionsController(this._repository, {VoidCallback? onChanged})
+    : _onChanged = onChanged ?? _doNothing,
+      _competitions = _repository.getAll();
 
   final CompetitionRepository _repository;
+  final VoidCallback _onChanged;
   List<Competition> _competitions;
   int _nextId = 0;
 
@@ -89,8 +91,16 @@ class CompetitionsController extends ChangeNotifier {
     _refresh();
   }
 
+  void clear() {
+    _repository.clear();
+    _refresh();
+  }
+
   void _refresh() {
     _competitions = _repository.getAll();
+    _onChanged();
     notifyListeners();
   }
 }
+
+void _doNothing() {}

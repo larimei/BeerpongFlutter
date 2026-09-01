@@ -10,6 +10,8 @@ abstract interface class CompetitionRepository {
   void update(Competition competition);
 
   void delete(String id);
+
+  void clear();
 }
 
 class InMemoryCompetitionRepository implements CompetitionRepository {
@@ -45,4 +47,7 @@ class InMemoryCompetitionRepository implements CompetitionRepository {
   void delete(String id) {
     _competitions.removeWhere((competition) => competition.id == id);
   }
+
+  @override
+  void clear() => _competitions.clear();
 }

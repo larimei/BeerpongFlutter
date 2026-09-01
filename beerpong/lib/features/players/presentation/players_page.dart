@@ -5,9 +5,14 @@ import '../application/players_controller.dart';
 import 'player_details_page.dart';
 
 class PlayersPage extends StatelessWidget {
-  const PlayersPage({required this.controller, super.key});
+  const PlayersPage({
+    required this.controller,
+    this.onOpenSettings,
+    super.key,
+  });
 
   final PlayersController controller;
+  final VoidCallback? onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +21,13 @@ class PlayersPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF0FAF9),
         title: const Text('Players'),
+        actions: [
+          IconButton(
+            onPressed: onOpenSettings,
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
       body: AnimatedBuilder(
         animation: controller,

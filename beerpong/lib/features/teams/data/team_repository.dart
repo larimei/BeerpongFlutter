@@ -10,6 +10,8 @@ abstract interface class TeamRepository {
   void update(Team team);
 
   void delete(String id);
+
+  void clear();
 }
 
 class InMemoryTeamRepository implements TeamRepository {
@@ -40,4 +42,7 @@ class InMemoryTeamRepository implements TeamRepository {
 
   @override
   void delete(String id) => _teams.removeWhere((team) => team.id == id);
+
+  @override
+  void clear() => _teams.clear();
 }
