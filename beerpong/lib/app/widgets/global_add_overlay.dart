@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../features/competitions/presentation/widgets/add_competition_form.dart';
 import '../../features/players/domain/player.dart';
+import '../../features/players/presentation/widgets/add_player_form.dart';
 import '../../features/teams/presentation/widgets/add_team_form.dart';
 import '../../features/teams/domain/team.dart';
-import 'entity_add_form.dart';
 
 enum GlobalAddTarget { player, team, competition }
 
@@ -23,14 +23,7 @@ class GlobalAddOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (target) {
-      GlobalAddTarget.player => EntityAddForm(
-        entityName: 'player',
-        icon: Icons.sports_bar_outlined,
-        backgroundKey: const Key('add-player-background'),
-        avatarKey: const Key('add-player-avatar'),
-        iconKey: const Key('add-player-icon'),
-        colorPickerIconKey: const Key('color-picker-player-icon'),
-        colorPickerWheelKey: const Key('player-color-wheel'),
+      GlobalAddTarget.player => AddPlayerForm(
         onSubmit: (player) => Navigator.pop(context, player),
         onCancel: () => Navigator.pop(context),
       ),

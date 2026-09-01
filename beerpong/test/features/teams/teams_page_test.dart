@@ -56,13 +56,16 @@ void main() {
   });
 
   testWidgets('does not show team members on the team card', (tester) async {
-    final playersController = PlayersController(InMemoryPlayerRepository());
     final competitionsController = CompetitionsController(
       InMemoryCompetitionRepository(),
     );
     final teamsController = TeamsController(
       InMemoryTeamRepository(),
       competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(),
+      teamsController,
     );
     addTearDown(playersController.dispose);
     addTearDown(competitionsController.dispose);
@@ -100,13 +103,16 @@ void main() {
       playerIds: [],
       color: Colors.amber,
     );
-    final playersController = PlayersController(InMemoryPlayerRepository());
     final competitionsController = CompetitionsController(
       InMemoryCompetitionRepository(),
     );
     final teamsController = TeamsController(
       InMemoryTeamRepository(const [team]),
       competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(),
+      teamsController,
     );
     addTearDown(playersController.dispose);
     addTearDown(competitionsController.dispose);
@@ -159,10 +165,13 @@ void main() {
         ),
       ]),
     );
-    final playersController = PlayersController(InMemoryPlayerRepository());
     final teamsController = TeamsController(
       InMemoryTeamRepository(const [team]),
       competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(),
+      teamsController,
     );
     addTearDown(competitionsController.dispose);
     addTearDown(playersController.dispose);
@@ -229,10 +238,13 @@ void main() {
         ),
       ]),
     );
-    final playersController = PlayersController(InMemoryPlayerRepository());
     final teamsController = TeamsController(
       InMemoryTeamRepository(const [team]),
       competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(),
+      teamsController,
     );
     addTearDown(competitionsController.dispose);
     addTearDown(playersController.dispose);
@@ -308,14 +320,14 @@ void main() {
     );
     expect(find.text('Champions'), findsOneWidget);
     expect(find.text('Runners-up'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
+    expect(find.byType(Chip), findsNWidgets(2));
 
     teamsController.deleteTeam(deletedTeam.id);
     await tester.pump();
 
     expect(find.text('Champions'), findsNothing);
     expect(find.text('Runners-up'), findsOneWidget);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(Chip), findsOneWidget);
   });
 
   testWidgets('competition cards show only their name and icon', (

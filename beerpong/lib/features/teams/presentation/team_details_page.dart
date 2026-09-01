@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
+import '../../../app/widgets/entity_delete_dialog.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
 import '../../../app/widgets/entity_selection.dart';
 import '../../players/application/players_controller.dart';
@@ -116,31 +117,15 @@ class TeamDetailsPage extends StatelessWidget {
 
   Future<void> _deleteTeam(BuildContext context, Team team) async {
     final competitionCount = controller.competitionCountForTeam(team.id);
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete team?'),
-        content: Text(
-          competitionCount == 0
-              ? 'Are you sure you want to delete ${team.name}?'
-              : '${team.name} is assigned to $competitionCount '
-                    '${competitionCount == 1 ? 'competition' : 'competitions'}. '
-                    'Deleting it will remove it from '
-                    '${competitionCount == 1 ? 'that competition' : 'those competitions'}.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final shouldDelete = await showEntityDeleteDialog(
+      context,
+      entityName: 'team',
+      displayName: team.name,
+      assignmentCount: competitionCount,
+      assignmentSingular: 'competition',
+      assignmentPlural: 'competitions',
     );
-    if (!(shouldDelete ?? false) || !context.mounted) return;
+    if (!shouldDelete || !context.mounted) return;
     controller.deleteTeam(team.id);
     Navigator.pop(context);
   }

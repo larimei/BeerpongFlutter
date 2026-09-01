@@ -191,22 +191,24 @@ class _CompetitionInformation extends StatelessWidget {
           value: Text(competition.mode.label),
         ),
         const SizedBox(height: 16),
-        _InformationRow(
-          label: 'Teams',
-          value: Text('${competition.teamIds.length}'),
-        ),
-        const SizedBox(height: 8),
+        Text('Teams', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
         if (assignedTeams.isEmpty)
           const Text('No teams assigned')
         else
-          ...assignedTeams.map(
-            (team) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              leading: CircleAvatar(radius: 12, backgroundColor: team.color),
-              title: Text(team.name),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: assignedTeams
+                .map(
+                  (team) => Chip(
+                    avatar: CircleAvatar(backgroundColor: team.color),
+                    label: Text(team.name),
+                  ),
+                )
+                .toList(),
           ),
+        const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
           child: OutlinedButton.icon(

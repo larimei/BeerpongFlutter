@@ -1,4 +1,13 @@
 import 'package:beerpong/app/app.dart';
+import 'package:beerpong/features/competitions/application/competitions_controller.dart';
+import 'package:beerpong/features/competitions/data/competition_repository.dart';
+import 'package:beerpong/features/players/application/players_controller.dart';
+import 'package:beerpong/features/players/data/player_repository.dart';
+import 'package:beerpong/features/players/domain/player.dart';
+import 'package:beerpong/features/players/presentation/player_details_page.dart';
+import 'package:beerpong/features/teams/application/teams_controller.dart';
+import 'package:beerpong/features/teams/data/team_repository.dart';
+import 'package:beerpong/features/teams/domain/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -17,6 +26,9 @@ void main() {
     expect(find.text('Add player'), findsOneWidget);
     expect(find.text('Add Team'), findsNothing);
     expect(find.text('Add Competition'), findsNothing);
+    final nameField = tester.widget<TextFormField>(find.byType(TextFormField));
+    expect(nameField.controller?.text, isNotEmpty);
+    await tester.enterText(find.byType(TextFormField), '');
     await tester.tap(find.widgetWithText(FilledButton, 'Add'));
     await tester.pump();
     expect(find.text('Enter a player name'), findsOneWidget);
@@ -88,6 +100,79 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
     expect(find.text('No players yet'), findsOneWidget);
+  });
+
+  testWidgets('assigned player warning cancels or cleans every team', (
+    tester,
+  ) async {
+    const player = Player(
+      id: 'player-1',
+      name: 'Jonathan',
+      color: Colors.green,
+    );
+    final competitionsController = CompetitionsController(
+      InMemoryCompetitionRepository(),
+    );
+    final teamsController = TeamsController(
+      InMemoryTeamRepository(const [
+        Team(
+          id: 'team-1',
+          name: 'First Team',
+          playerIds: ['player-1', 'player-2'],
+          color: Colors.red,
+        ),
+        Team(
+          id: 'team-2',
+          name: 'Second Team',
+          playerIds: ['player-3', 'player-1'],
+          color: Colors.blue,
+        ),
+      ]),
+      competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(const [player]),
+      teamsController,
+    );
+    addTearDown(competitionsController.dispose);
+    addTearDown(teamsController.dispose);
+    addTearDown(playersController.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayerDetailsPage(
+          playerId: player.id,
+          controller: playersController,
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Delete player'));
+    await tester.tap(find.text('Delete player'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Jonathan is assigned to 2 teams. Deleting it will remove it from '
+        'those teams.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(playersController.playerById(player.id), same(player));
+    expect(teamsController.teamById('team-1')?.playerIds, [
+      'player-1',
+      'player-2',
+    ]);
+
+    await tester.tap(find.text('Delete player'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(playersController.playerById(player.id), isNull);
+    expect(teamsController.teamById('team-1')?.playerIds, ['player-2']);
+    expect(teamsController.teamById('team-2')?.playerIds, ['player-3']);
   });
 
   testWidgets('color picker shows a preview and requires confirmation', (

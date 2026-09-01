@@ -39,13 +39,16 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
-    _playersController = PlayersController(InMemoryPlayerRepository());
     _competitionsController = CompetitionsController(
       InMemoryCompetitionRepository(),
     );
     _teamsController = TeamsController(
       InMemoryTeamRepository(),
       _competitionsController,
+    );
+    _playersController = PlayersController(
+      InMemoryPlayerRepository(),
+      _teamsController,
     );
   }
 

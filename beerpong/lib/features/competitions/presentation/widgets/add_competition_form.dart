@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/data/entity_name_generator.dart';
 import '../../../../app/widgets/entity_add_form.dart';
 import '../../../../app/widgets/entity_selection.dart';
 import '../../../teams/domain/team.dart';
@@ -38,12 +39,32 @@ class AddCompetitionForm extends StatefulWidget {
 class _AddCompetitionFormState extends State<AddCompetitionForm> {
   TournamentMode _selectedMode = TournamentMode.knockout;
   Set<String> _selectedTeamIds = {};
+  late final Future<String> _initialName;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialName = EntityNameGenerator().randomName(EntityNameType.competition);
+  }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _initialName,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData && !snapshot.hasError) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _buildForm(snapshot.data ?? '');
+      },
+    );
+  }
+
+  Widget _buildForm(String initialName) {
     return EntityAddForm(
       entityName: 'competition',
       icon: Icons.emoji_events_outlined,
+      initialName: initialName,
       backgroundKey: const Key('add-competition-background'),
       avatarKey: const Key('add-competition-avatar'),
       iconKey: const Key('add-competition-icon'),

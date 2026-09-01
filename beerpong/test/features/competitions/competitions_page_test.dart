@@ -28,6 +28,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(
       find.text('No teams available. You can add teams later.'),
@@ -70,6 +71,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Red Rockets'), findsNothing);
     expect(find.text('Blue Birds'), findsNothing);
@@ -106,7 +108,7 @@ void main() {
 
     expect(find.text('Add competition'), findsOneWidget);
     final nameField = tester.widget<TextFormField>(find.byType(TextFormField));
-    expect(nameField.controller?.text, isEmpty);
+    expect(nameField.controller?.text, isNotEmpty);
     final modeField = tester.widget<DropdownButtonFormField<TournamentMode>>(
       find.byKey(const Key('competition-mode')),
     );
@@ -117,6 +119,7 @@ void main() {
     final decoration = colorPreview.decoration as BoxDecoration;
     expect(decoration.color, const Color(0xFFFFD95A));
 
+    await tester.enterText(find.byType(TextFormField), '');
     await _tapAdd(tester);
     await tester.pump();
     expect(find.text('Enter a competition name'), findsOneWidget);
@@ -196,7 +199,9 @@ void main() {
     final controller = _controllerWithCompetitions();
     addTearDown(controller.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: CompetitionsPage(controller: controller)),
+      MaterialApp(
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
     );
 
     await tester.tap(find.text('Summer Cup'));
@@ -207,7 +212,8 @@ void main() {
     expect(find.text('Tournament mode'), findsOneWidget);
     expect(find.text('Knockout'), findsOneWidget);
     expect(find.text('Teams'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
+    expect(find.text('No teams assigned'), findsNothing);
+    expect(find.byType(Chip), findsNWidgets(2));
     expect(find.text('Competition color'), findsOneWidget);
     expect(find.byKey(const Key('competition-color-preview')), findsOneWidget);
     expect(find.text('Won games'), findsNothing);
@@ -230,6 +236,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Red Rockets'), findsOneWidget);
     expect(find.text('Blue Birds'), findsOneWidget);
+    expect(find.byType(Chip), findsNWidgets(2));
+    final teamChips = tester.widgetList<Chip>(find.byType(Chip)).toList();
+    expect(
+      teamChips.map((chip) => (chip.avatar as CircleAvatar).backgroundColor),
+      [Colors.red, Colors.blue],
+    );
 
     await tester.tap(find.text('Add or remove teams'));
     await tester.pumpAndSettle();
@@ -250,7 +262,7 @@ void main() {
     expect(controller.competitions.first.teamIds, ['team-2']);
     expect(find.text('Red Rockets'), findsNothing);
     expect(find.text('Blue Birds'), findsOneWidget);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(Chip), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -263,7 +275,9 @@ void main() {
     final controller = _controllerWithCompetitions();
     addTearDown(controller.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: CompetitionsPage(controller: controller)),
+      MaterialApp(
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
     );
     await tester.tap(find.text('Summer Cup'));
     await tester.pumpAndSettle();
@@ -301,7 +315,7 @@ void main() {
 
     expect(find.text('Updated Cup'), findsOneWidget);
     expect(find.text('Round robin'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
+    expect(find.byType(Chip), findsNWidgets(2));
     expect(controller.competitions.first.color, Colors.blue);
 
     await tester.pageBack();
@@ -323,6 +337,7 @@ void main() {
     await tester.tap(find.text('Summer Cup'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Delete competition'));
     await tester.tap(find.text('Delete competition'));
     await tester.pumpAndSettle();
     expect(
@@ -334,6 +349,7 @@ void main() {
     expect(find.text('Competition details'), findsOneWidget);
     expect(controller.competitions, hasLength(2));
 
+    await tester.ensureVisible(find.text('Delete competition'));
     await tester.tap(find.text('Delete competition'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));

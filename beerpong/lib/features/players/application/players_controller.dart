@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../teams/application/teams_controller.dart';
 import '../data/player_repository.dart';
 import '../domain/player.dart';
 
 class PlayersController extends ChangeNotifier {
-  PlayersController(this._repository) : _players = _repository.getAll();
+  PlayersController(this._repository, this._teamsController)
+    : _players = _repository.getAll();
 
   final PlayerRepository _repository;
+  final TeamsController _teamsController;
   List<Player> _players;
   int _nextId = 0;
 
   List<Player> get players => List.unmodifiable(_players);
 
   Player? playerById(String id) => _repository.getById(id);
+
+  int teamCountForPlayer(String playerId) =>
+      _teamsController.teamCountForPlayer(playerId);
 
   bool addPlayer({required String name, required Color color}) {
     final trimmedName = name.trim();
@@ -29,6 +35,7 @@ class PlayersController extends ChangeNotifier {
   }
 
   void deletePlayer(String id) {
+    _teamsController.removePlayerFromTeams(id);
     _repository.delete(id);
     _refresh();
   }

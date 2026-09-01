@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/data/entity_name_generator.dart';
 import '../../../../app/widgets/entity_add_form.dart';
 import '../../../../app/widgets/entity_selection.dart';
 import '../../../players/domain/player.dart';
-import '../../data/team_name_generator.dart';
 
 class NewTeam {
   const NewTeam({
@@ -40,7 +40,7 @@ class _AddTeamFormState extends State<AddTeamForm> {
   @override
   void initState() {
     super.initState();
-    _initialName = TeamNameGenerator().randomName();
+    _initialName = EntityNameGenerator().randomName(EntityNameType.team);
   }
 
   @override

@@ -20,6 +20,9 @@ class TeamsController extends ChangeNotifier {
   int competitionCountForTeam(String teamId) =>
       _competitionsController.competitionCountForTeam(teamId);
 
+  int teamCountForPlayer(String playerId) =>
+      _teams.where((team) => team.playerIds.contains(playerId)).length;
+
   bool addTeam({
     required String name,
     required List<String> playerIds,
@@ -62,6 +65,20 @@ class TeamsController extends ChangeNotifier {
   void deleteTeam(String id) {
     _competitionsController.removeTeamFromCompetitions(id);
     _repository.delete(id);
+    _refresh();
+  }
+
+  void removePlayerFromTeams(String playerId) {
+    for (final team in _teams) {
+      if (!team.playerIds.contains(playerId)) continue;
+      _repository.update(
+        team.copyWith(
+          playerIds: List.unmodifiable(
+            team.playerIds.where((id) => id != playerId),
+          ),
+        ),
+      );
+    }
     _refresh();
   }
 

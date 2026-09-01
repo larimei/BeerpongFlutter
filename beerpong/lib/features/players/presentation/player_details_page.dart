@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
+import '../../../app/widgets/entity_delete_dialog.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
 import '../application/players_controller.dart';
 import '../domain/player.dart';
@@ -78,24 +79,15 @@ class PlayerDetailsPage extends StatelessWidget {
   }
 
   Future<void> _deletePlayer(BuildContext context, Player player) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete player?'),
-        content: Text('Are you sure you want to delete ${player.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final shouldDelete = await showEntityDeleteDialog(
+      context,
+      entityName: 'player',
+      displayName: player.name,
+      assignmentCount: controller.teamCountForPlayer(player.id),
+      assignmentSingular: 'team',
+      assignmentPlural: 'teams',
     );
-    if (!(shouldDelete ?? false) || !context.mounted) return;
+    if (!shouldDelete || !context.mounted) return;
     controller.deletePlayer(player.id);
     Navigator.pop(context);
   }
