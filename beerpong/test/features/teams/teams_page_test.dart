@@ -7,6 +7,7 @@ import 'package:beerpong/features/competitions/presentation/competition_details_
 import 'package:beerpong/features/competitions/presentation/competitions_page.dart';
 import 'package:beerpong/features/players/application/players_controller.dart';
 import 'package:beerpong/features/players/data/player_repository.dart';
+import 'package:beerpong/features/players/domain/player.dart';
 import 'package:beerpong/features/teams/application/teams_controller.dart';
 import 'package:beerpong/features/teams/data/team_repository.dart';
 import 'package:beerpong/features/teams/domain/team.dart';
@@ -55,30 +56,62 @@ void main() {
     expect(find.text('Delete team'), findsOneWidget);
   });
 
-  testWidgets('does not show team members on the team card', (tester) async {
+  testWidgets('team cards summarize only existing members', (tester) async {
     final competitionsController = CompetitionsController(
       InMemoryCompetitionRepository(),
     );
     final teamsController = TeamsController(
-      InMemoryTeamRepository(),
+      InMemoryTeamRepository(const [
+        Team(
+          id: 'empty',
+          name: 'Empty team',
+          playerIds: [],
+          color: Colors.amber,
+        ),
+        Team(
+          id: 'solo',
+          name: 'Solo team',
+          playerIds: ['alice'],
+          color: Colors.amber,
+        ),
+        Team(
+          id: 'pair',
+          name: 'Pair team',
+          playerIds: ['bob', 'charlie'],
+          color: Colors.amber,
+        ),
+        Team(
+          id: 'crowd',
+          name: 'Crowd team',
+          playerIds: ['alice', 'bob', 'charlie', 'delta', 'missing'],
+          color: Colors.amber,
+        ),
+        Team(
+          id: 'orphaned',
+          name: 'Orphaned team',
+          playerIds: ['missing'],
+          color: Colors.amber,
+        ),
+      ]),
       competitionsController,
     );
     final playersController = PlayersController(
-      InMemoryPlayerRepository(),
+      InMemoryPlayerRepository(const [
+        Player(id: 'alice', name: 'Alice', color: Colors.red),
+        Player(id: 'bob', name: 'Bob', color: Colors.blue),
+        Player(id: 'charlie', name: 'Charlie', color: Colors.green),
+        Player(id: 'delta', name: 'Delta', color: Colors.orange),
+      ]),
       teamsController,
     );
     addTearDown(playersController.dispose);
     addTearDown(competitionsController.dispose);
     addTearDown(teamsController.dispose);
 
-    for (final name in ['One', 'Two', 'Three', 'Four']) {
-      playersController.addPlayer(name: name, color: Colors.amber);
-    }
-    teamsController.addTeam(
-      name: 'Full team',
-      playerIds: playersController.players.map((player) => player.id).toList(),
-      color: Colors.amber,
-    );
+    tester.view.physicalSize = const Size(1200, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -89,9 +122,85 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('One'), findsNothing);
-    expect(find.text('4 players'), findsNothing);
+    expect(find.text('No players'), findsNWidgets(2));
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('Bob'), findsOneWidget);
+    expect(find.text('Charlie'), findsOneWidget);
+    final memberRowSpacing =
+        tester.getCenter(find.text('Charlie')).dy -
+        tester.getCenter(find.text('Bob')).dy;
+    expect(memberRowSpacing, inExclusiveRange(0, 24));
+    expect(find.text('4 players'), findsOneWidget);
+    expect(find.text('missing'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long team and member names stay accessible on narrow cards', (
+    tester,
+  ) async {
+    const teamName = 'The Incredibly Long Championship Team Name';
+    const firstPlayerName = 'Alexandria-Cassandra Extremelylongsurname';
+    const secondPlayerName = 'Maximilian-Alexander Anotherlongsurname';
+    final competitionsController = CompetitionsController(
+      InMemoryCompetitionRepository(),
+    );
+    final teamsController = TeamsController(
+      InMemoryTeamRepository(const [
+        Team(
+          id: 'team-1',
+          name: teamName,
+          playerIds: ['player-1', 'player-2'],
+          color: Colors.amber,
+        ),
+        Team(
+          id: 'team-2',
+          name: 'Short pair',
+          playerIds: ['player-3', 'player-4'],
+          color: Colors.blue,
+        ),
+      ]),
+      competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(const [
+        Player(id: 'player-1', name: firstPlayerName, color: Colors.red),
+        Player(id: 'player-2', name: secondPlayerName, color: Colors.blue),
+        Player(id: 'player-3', name: 'Bob', color: Colors.green),
+        Player(id: 'player-4', name: 'Mia', color: Colors.orange),
+      ]),
+      teamsController,
+    );
+    addTearDown(playersController.dispose);
+    addTearDown(competitionsController.dispose);
+    addTearDown(teamsController.dispose);
+
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TeamsPage(
+          controller: teamsController,
+          playersController: playersController,
+        ),
+      ),
+    );
+
+    expect(find.byType(EntityCard), findsNWidgets(2));
+    final cardSize = tester.getSize(find.byType(EntityCard).first);
+    expect(cardSize.width, cardSize.height);
+    for (final name in [teamName, firstPlayerName, secondPlayerName]) {
+      expect(find.byTooltip(name), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape(name))),
+        findsOneWidget,
+      );
+    }
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 
   testWidgets('unassigned team keeps the existing delete confirmation', (

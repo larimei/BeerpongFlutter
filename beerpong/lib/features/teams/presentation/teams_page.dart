@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_card.dart';
 import '../../players/application/players_controller.dart';
+import '../../players/domain/player.dart';
 import '../application/teams_controller.dart';
 import 'team_details_page.dart';
 
@@ -39,10 +40,12 @@ class TeamsPage extends StatelessWidget {
             itemCount: teams.length,
             itemBuilder: (context, index) {
               final team = teams[index];
+              final players = playersController.playersByIds(team.playerIds);
               return EntityCard(
                 name: team.name,
                 color: team.color,
                 icon: Icons.groups_outlined,
+                additionalContent: _TeamMemberSummary(players: players),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (context) => TeamDetailsPage(
@@ -57,6 +60,49 @@ class TeamsPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _TeamMemberSummary extends StatelessWidget {
+  const _TeamMemberSummary({required this.players});
+
+  final List<Player> players;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall;
+    if (players.isEmpty) {
+      return EntityCardText(
+        text: 'No players',
+        preferredFontSize: 14,
+        minimumFontSize: 12,
+        maxLines: 1,
+        style: style,
+      );
+    }
+    if (players.length > 2) {
+      return EntityCardText(
+        text: '${players.length} players',
+        preferredFontSize: 14,
+        minimumFontSize: 12,
+        maxLines: 1,
+        style: style,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: players
+          .map(
+            (player) => EntityCardText(
+              text: player.name,
+              preferredFontSize: 14,
+              minimumFontSize: 12,
+              maxLines: 1,
+              style: style,
+            ),
+          )
+          .toList(),
     );
   }
 }

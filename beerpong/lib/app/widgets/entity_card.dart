@@ -32,16 +32,16 @@ class EntityCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(additionalContent == null ? 16 : 10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, size: 40),
-                const SizedBox(height: 12),
-                Flexible(child: _ResponsiveEntityName(name: name)),
+                SizedBox(height: additionalContent == null ? 12 : 6),
+                Flexible(child: EntityCardText(text: name)),
                 if (additionalContent != null) ...[
-                  const SizedBox(height: 12),
-                  additionalContent!,
+                  const SizedBox(height: 4),
+                  Flexible(flex: 2, child: additionalContent!),
                 ],
               ],
             ),
@@ -52,25 +52,33 @@ class EntityCard extends StatelessWidget {
   }
 }
 
-class _ResponsiveEntityName extends StatelessWidget {
-  const _ResponsiveEntityName({required this.name});
+class EntityCardText extends StatelessWidget {
+  const EntityCardText({
+    required this.text,
+    this.preferredFontSize = 18,
+    this.minimumFontSize = 14,
+    this.maxLines = 2,
+    this.style,
+    super.key,
+  });
 
-  static const double _preferredFontSize = 18;
-  static const double _minimumFontSize = 14;
-
-  final String name;
+  final String text;
+  final double preferredFontSize;
+  final double minimumFontSize;
+  final int maxLines;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    final baseStyle = Theme.of(context).textTheme.titleLarge;
+    final baseStyle = style ?? Theme.of(context).textTheme.titleLarge;
     final textScaler = MediaQuery.textScalerOf(context);
     final textDirection = Directionality.of(context);
     final locale = Localizations.maybeLocaleOf(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        var fontSize = _preferredFontSize;
-        while (fontSize > _minimumFontSize &&
+        var fontSize = preferredFontSize;
+        while (fontSize > minimumFontSize &&
             !_fits(
               style: baseStyle?.copyWith(fontSize: fontSize),
               textScaler: textScaler,
@@ -89,10 +97,9 @@ class _ResponsiveEntityName extends StatelessWidget {
           textDirection: textDirection,
           locale: locale,
         );
-        final maxLines = (constraints.maxHeight / lineHeight).floor().clamp(
-          1,
-          2,
-        );
+        final fittingLines = constraints.maxHeight.isFinite
+            ? (constraints.maxHeight / lineHeight).floor().clamp(1, maxLines)
+            : maxLines;
         final isTruncated = !_fits(
           style: style,
           textScaler: textScaler,
@@ -100,22 +107,26 @@ class _ResponsiveEntityName extends StatelessWidget {
           locale: locale,
           maxWidth: constraints.maxWidth,
           maxHeight: constraints.maxHeight,
-          maxLines: maxLines,
+          maxLines: fittingLines,
         );
-        final text = Text(
-          name,
-          maxLines: maxLines,
+        final textWidget = Text(
+          text,
+          maxLines: fittingLines,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: style,
         );
 
         return Semantics(
-          label: name,
+          label: text,
           excludeSemantics: true,
           child: isTruncated
-              ? Tooltip(message: name, excludeFromSemantics: true, child: text)
-              : text,
+              ? Tooltip(
+                  message: text,
+                  excludeFromSemantics: true,
+                  child: textWidget,
+                )
+              : textWidget,
         );
       },
     );
@@ -128,11 +139,11 @@ class _ResponsiveEntityName extends StatelessWidget {
     required Locale? locale,
     required double maxWidth,
     required double maxHeight,
-    int maxLines = 2,
+    int? maxLines,
   }) {
     final painter = TextPainter(
-      text: TextSpan(text: name, style: style),
-      maxLines: maxLines,
+      text: TextSpan(text: text, style: style),
+      maxLines: maxLines ?? this.maxLines,
       textDirection: textDirection,
       textScaler: textScaler,
       locale: locale,

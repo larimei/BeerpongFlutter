@@ -17,6 +17,13 @@ class PlayersController extends ChangeNotifier {
 
   Player? playerById(String id) => _repository.getById(id);
 
+  List<Player> playersByIds(Iterable<String> ids) {
+    final requestedIds = ids.toSet();
+    return List.unmodifiable(
+      _players.where((player) => requestedIds.contains(player.id)),
+    );
+  }
+
   int teamCountForPlayer(String playerId) =>
       _teamsController.teamCountForPlayer(playerId);
 
