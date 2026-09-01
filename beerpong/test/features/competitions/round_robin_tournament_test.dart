@@ -3,6 +3,8 @@ import 'package:beerpong/features/competitions/application/competitions_controll
 import 'package:beerpong/features/competitions/data/competition_repository.dart';
 import 'package:beerpong/features/competitions/domain/competition.dart';
 import 'package:beerpong/features/competitions/presentation/competition_details_page.dart';
+import 'package:beerpong/features/competitions/presentation/widgets/round_robin_tournament_tab.dart';
+import 'package:beerpong/features/competitions/presentation/widgets/tournament_match_card.dart';
 import 'package:beerpong/features/teams/domain/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -153,9 +155,50 @@ void main() {
     ]);
   });
 
-  testWidgets('plays the next game and shows the completed winner', (
+  testWidgets('shows all games with the shared tournament match card', (
     tester,
   ) async {
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'league',
+          name: 'League',
+          mode: TournamentMode.roundRobin,
+          color: Colors.blue,
+          teamIds: ['red', 'blue', 'green'],
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+    controller.generateRoundRobinTournament('league');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RoundRobinTournamentTab(
+          competition: controller.competitionById('league')!,
+          teams: const [
+            Team(id: 'red', name: 'Red', playerIds: [], color: Colors.red),
+            Team(id: 'blue', name: 'Blue', playerIds: [], color: Colors.blue),
+            Team(
+              id: 'green',
+              name: 'Green',
+              playerIds: [],
+              color: Colors.green,
+            ),
+          ],
+          onConfirmWinner: (_, _) => false,
+        ),
+      ),
+    );
+
+    expect(find.byType(TournamentMatchCard), findsNWidgets(3));
+    final background = tester.widget<Container>(
+      find.byKey(const Key('round-robin-tournament-background')),
+    );
+    expect(background.decoration, isA<BoxDecoration>());
+  });
+
+  testWidgets('plays a game and shows the completed winner', (tester) async {
     final controller = CompetitionsController(
       InMemoryCompetitionRepository(const [
         Competition(
@@ -186,8 +229,12 @@ void main() {
     await tester.tap(find.text('Tournament'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Next game'), findsOneWidget);
-    await tester.tap(find.widgetWithText(RadioListTile<String>, 'Red'));
+    expect(find.text('Games'), findsOneWidget);
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) => widget is Radio<String> && widget.value == 'red',
+      ),
+    );
     await tester.pump();
     await tester.tap(find.text('Confirm winner'));
     await tester.pumpAndSettle();

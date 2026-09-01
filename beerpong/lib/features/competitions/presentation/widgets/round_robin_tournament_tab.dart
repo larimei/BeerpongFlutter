@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../teams/domain/team.dart';
 import '../../domain/competition.dart';
+import 'tournament_match_card.dart';
 
 class RoundRobinTournamentTab extends StatefulWidget {
   const RoundRobinTournamentTab({
@@ -21,119 +22,88 @@ class RoundRobinTournamentTab extends StatefulWidget {
 }
 
 class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
-  String? _selectedWinnerId;
+  final Map<String, String> _selectedWinners = {};
 
   @override
   Widget build(BuildContext context) {
     final tournament = widget.competition.roundRobinTournament;
+    final gradient = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [widget.competition.color, Colors.white],
+      ),
+    );
     if (tournament == null) {
-      return const Center(child: Text('No tournament generated yet.'));
+      return Container(
+        decoration: gradient,
+        child: const Center(child: Text('No tournament generated yet.')),
+      );
     }
     final names = {for (final team in widget.teams) team.id: team.name};
-    final nextMatch = tournament.nextMatch;
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        if (tournament.isComplete)
-          Card(
-            color: Colors.amber.shade100,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Winner: ${names[tournament.winnerTeamId] ?? tournament.winnerTeamId}',
-                style: Theme.of(context).textTheme.titleLarge,
+    final colors = {for (final team in widget.teams) team.id: team.color};
+    return Container(
+      key: const Key('round-robin-tournament-background'),
+      decoration: gradient,
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          if (tournament.isComplete)
+            Card(
+              color: Colors.amber.shade100,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Winner: ${names[tournament.winnerTeamId] ?? tournament.winnerTeamId}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
             ),
-          )
-        else ...[
-          Text('Next game', style: Theme.of(context).textTheme.titleLarge),
+          Text('Games', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          _MatchCard(
-            match: nextMatch!,
-            names: names,
-            selectedWinnerId: _selectedWinnerId,
-            onWinnerSelected: (winnerId) =>
-                setState(() => _selectedWinnerId = winnerId),
-            onConfirm: () {
-              final winner = _selectedWinnerId;
-              if (winner != null &&
-                  widget.onConfirmWinner(nextMatch.id, winner)) {
-                setState(() => _selectedWinnerId = null);
-              }
-            },
-          ),
-        ],
-        const SizedBox(height: 24),
-        Text('Standings', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        Card(
-          child: Column(
-            children: [
-              for (var index = 0; index < tournament.standings.length; index++)
-                ListTile(
-                  leading: Text('${index + 1}'),
-                  title: Text(
-                    names[tournament.standings[index].teamId] ??
-                        tournament.standings[index].teamId,
-                  ),
-                  trailing: Text('${tournament.standings[index].wins} wins'),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MatchCard extends StatelessWidget {
-  const _MatchCard({
-    required this.match,
-    required this.names,
-    required this.selectedWinnerId,
-    required this.onWinnerSelected,
-    required this.onConfirm,
-  });
-
-  final RoundRobinMatch match;
-  final Map<String, String> names;
-  final String? selectedWinnerId;
-  final ValueChanged<String> onWinnerSelected;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          RadioGroup<String>(
-            groupValue: selectedWinnerId,
-            onChanged: (winnerId) => onWinnerSelected(winnerId!),
+          for (final match in tournament.matches) ...[
+            TournamentMatchCard(
+              teamIds: match.teamIds,
+              names: names,
+              colors: colors,
+              winnerTeamId: match.winnerTeamId,
+              selectedWinnerId: _selectedWinners[match.id],
+              onWinnerSelected: (winnerId) =>
+                  setState(() => _selectedWinners[match.id] = winnerId),
+              onConfirm: () {
+                final winner = _selectedWinners[match.id];
+                if (winner != null &&
+                    widget.onConfirmWinner(match.id, winner)) {
+                  setState(() => _selectedWinners.remove(match.id));
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 12),
+          Text('Standings', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Card(
             child: Column(
               children: [
-                RadioListTile<String>(
-                  value: match.teamIds.first,
-                  title: Text(
-                    names[match.teamIds.first] ?? match.teamIds.first,
+                for (
+                  var index = 0;
+                  index < tournament.standings.length;
+                  index++
+                )
+                  ListTile(
+                    leading: Text('${index + 1}'),
+                    title: Text(
+                      names[tournament.standings[index].teamId] ??
+                          tournament.standings[index].teamId,
+                    ),
+                    trailing: Text('${tournament.standings[index].wins} wins'),
                   ),
-                ),
-                const Text('vs'),
-                RadioListTile<String>(
-                  value: match.teamIds.last,
-                  title: Text(names[match.teamIds.last] ?? match.teamIds.last),
-                ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: selectedWinnerId == null ? null : onConfirm,
-            child: const Text('Confirm winner'),
-          ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
