@@ -110,11 +110,19 @@ class TeamDetailsPage extends StatelessWidget {
   }
 
   Future<void> _deleteTeam(BuildContext context, Team team) async {
+    final competitionCount = controller.competitionCountForTeam(team.id);
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete team?'),
-        content: Text('Are you sure you want to delete ${team.name}?'),
+        content: Text(
+          competitionCount == 0
+              ? 'Are you sure you want to delete ${team.name}?'
+              : '${team.name} is assigned to $competitionCount '
+                    '${competitionCount == 1 ? 'competition' : 'competitions'}. '
+                    'Deleting it will remove it from '
+                    '${competitionCount == 1 ? 'that competition' : 'those competitions'}.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

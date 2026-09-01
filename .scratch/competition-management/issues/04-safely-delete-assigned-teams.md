@@ -4,13 +4,21 @@
 
 **Blocked by:** 03: Assign and manage competition teams.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Deleting an unassigned team retains the existing confirmation behavior.
-- [ ] Deleting an assigned team warns how many competitions contain it and explains that it will be removed from them.
-- [ ] Cancelling the warning leaves both the team and all competition memberships unchanged.
-- [ ] Confirming deletion removes the team and its membership from every affected competition without changing the other teams or competition metadata.
-- [ ] Competition cards and open detail pages immediately reflect the updated team memberships and counts.
-- [ ] No round-reference deletion guard is implemented before the future Rounds feature provides that domain data.
-- [ ] Automated controller and widget tests cover unassigned deletion, affected-competition counts, cancellation, cleanup across multiple competitions, and immediate UI updates.
-- [ ] Formatting, static analysis, and all relevant tests pass.
+- [x] Deleting an unassigned team retains the existing confirmation behavior.
+- [x] Deleting an assigned team warns how many competitions contain it and explains that it will be removed from them.
+- [x] Cancelling the warning leaves both the team and all competition memberships unchanged.
+- [x] Confirming deletion removes the team and its membership from every affected competition without changing the other teams or competition metadata.
+- [x] Competition cards and open detail pages immediately reflect the updated team memberships and counts.
+- [x] No round-reference deletion guard is implemented before the future Rounds feature provides that domain data.
+- [x] Automated controller and widget tests cover unassigned deletion, affected-competition counts, cancellation, cleanup across multiple competitions, and immediate UI updates.
+- [x] Formatting, static analysis, and all relevant tests pass.
+
+## Answer
+
+Implemented safe team deletion by making competition cleanup mandatory in the
+teams controller, warning about affected competitions before confirmation, and
+refreshing competition cards and open details immediately. Controller and
+widget coverage verifies cancellation, multi-competition cleanup, preserved
+metadata and unrelated memberships, and both assigned and unassigned flows.

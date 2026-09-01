@@ -40,9 +40,12 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _playersController = PlayersController(InMemoryPlayerRepository());
-    _teamsController = TeamsController(InMemoryTeamRepository());
     _competitionsController = CompetitionsController(
       InMemoryCompetitionRepository(),
+    );
+    _teamsController = TeamsController(
+      InMemoryTeamRepository(),
+      _competitionsController,
     );
   }
 

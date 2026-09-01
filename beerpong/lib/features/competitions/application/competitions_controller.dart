@@ -15,6 +15,10 @@ class CompetitionsController extends ChangeNotifier {
 
   Competition? competitionById(String id) => _repository.getById(id);
 
+  int competitionCountForTeam(String teamId) => _competitions
+      .where((competition) => competition.teamIds.contains(teamId))
+      .length;
+
   bool addCompetition({
     required String name,
     required TournamentMode mode,
@@ -64,6 +68,20 @@ class CompetitionsController extends ChangeNotifier {
     );
     _refresh();
     return true;
+  }
+
+  void removeTeamFromCompetitions(String teamId) {
+    for (final competition in _competitions) {
+      if (!competition.teamIds.contains(teamId)) continue;
+      _repository.update(
+        competition.copyWith(
+          teamIds: List.unmodifiable(
+            competition.teamIds.where((id) => id != teamId),
+          ),
+        ),
+      );
+    }
+    _refresh();
   }
 
   void deleteCompetition(String id) {
