@@ -1,10 +1,12 @@
 import 'package:beerpong/app/app.dart';
+import 'package:beerpong/app/widgets/entity_card.dart';
 import 'package:beerpong/features/competitions/application/competitions_controller.dart';
 import 'package:beerpong/features/competitions/data/competition_repository.dart';
 import 'package:beerpong/features/players/application/players_controller.dart';
 import 'package:beerpong/features/players/data/player_repository.dart';
 import 'package:beerpong/features/players/domain/player.dart';
 import 'package:beerpong/features/players/presentation/player_details_page.dart';
+import 'package:beerpong/features/players/presentation/players_page.dart';
 import 'package:beerpong/features/teams/application/teams_controller.dart';
 import 'package:beerpong/features/teams/data/team_repository.dart';
 import 'package:beerpong/features/teams/domain/team.dart';
@@ -13,6 +15,77 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() {
+  testWidgets(
+    'long player names stay accessible without overflow on narrow displays',
+    (tester) async {
+      const longName = 'Alexandria-Cassandra von Extremelylongsurname';
+      final competitionsController = CompetitionsController(
+        InMemoryCompetitionRepository(),
+      );
+      final teamsController = TeamsController(
+        InMemoryTeamRepository(),
+        competitionsController,
+      );
+      final playersController = PlayersController(
+        InMemoryPlayerRepository(const [
+          Player(id: 'player-1', name: longName, color: Colors.amber),
+          Player(id: 'player-2', name: 'Lara', color: Colors.blue),
+        ]),
+        teamsController,
+      );
+      addTearDown(competitionsController.dispose);
+      addTearDown(teamsController.dispose);
+      addTearDown(playersController.dispose);
+
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: PlayersPage(controller: playersController),
+        ),
+      );
+
+      final cardFinder = find.byType(EntityCard);
+      expect(cardFinder, findsNWidgets(2));
+      var cardSize = tester.getSize(cardFinder.first);
+      expect(cardSize.width, cardSize.height);
+      expect(tester.getSize(cardFinder.last), cardSize);
+
+      final cardIcon = tester.widget<Icon>(
+        find.descendant(of: cardFinder.first, matching: find.byType(Icon)),
+      );
+      expect(cardIcon.size, 40);
+
+      final nameText = tester.widget<Text>(find.text(longName));
+      expect(nameText.maxLines, lessThanOrEqualTo(2));
+      expect(nameText.overflow, TextOverflow.ellipsis);
+      expect(nameText.style?.fontSize, 14);
+      expect(find.byTooltip(longName), findsOneWidget);
+      expect(find.bySemanticsLabel(longName), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      tester.view.physicalSize = const Size(1024, 768);
+      await tester.pump();
+      cardSize = tester.getSize(cardFinder.first);
+      expect(cardSize.width, cardSize.height);
+      expect(tester.getSize(cardFinder.last), cardSize);
+      final shortNameText = tester.widget<Text>(find.text('Lara'));
+      expect(shortNameText.style?.fontSize, 18);
+      expect(find.byTooltip('Lara'), findsNothing);
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    },
+  );
+
   testWidgets('adds a player and opens details from a two-column card', (
     tester,
   ) async {
