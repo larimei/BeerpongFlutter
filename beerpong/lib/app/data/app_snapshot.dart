@@ -119,6 +119,23 @@ Map<String, Object> _competitionToJson(Competition competition) => {
   'mode': competition.mode.name,
   'color': competition.color.toARGB32(),
   'teamIds': competition.teamIds,
+  if (competition.tournament != null)
+    'tournament': {
+      'drawOrder': competition.tournament!.drawOrder,
+      'bracketSize': competition.tournament!.bracketSize,
+      'matches': competition.tournament!.matches
+          .map(
+            (match) => {
+              'id': match.id,
+              'round': match.round,
+              'index': match.index,
+              'teamIds': match.teamIds,
+              'winnerTeamId': match.winnerTeamId,
+              'isBye': match.isBye,
+            },
+          )
+          .toList(),
+    },
 };
 
 typedef _JsonDecoder<T> = T? Function(Map<String, dynamic> json);
@@ -195,12 +212,68 @@ Competition? _competitionFromJson(Map<String, dynamic> json) {
     _ => null,
   };
   if (tournamentMode == null) return null;
+  final tournament = _tournamentFromJson(json['tournament']);
+  if (json.containsKey('tournament') && tournament == null) return null;
   return Competition(
     id: id,
     name: name,
     mode: tournamentMode,
     color: Color(color),
     teamIds: teamIds,
+    tournament: tournament,
+  );
+}
+
+KnockoutTournament? _tournamentFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is! Map) {
+    return null;
+  }
+  final json = Map<String, dynamic>.from(value);
+  final drawOrder = _stringList(json['drawOrder']);
+  final bracketSize = json['bracketSize'];
+  final rawMatches = json['matches'];
+  if (drawOrder == null || bracketSize is! int || rawMatches is! List) {
+    return null;
+  }
+  final matches = <KnockoutMatch>[];
+  for (final rawMatch in rawMatches) {
+    if (rawMatch is! Map) {
+      return null;
+    }
+    final match = Map<String, dynamic>.from(rawMatch);
+    final id = match['id'];
+    final round = match['round'];
+    final index = match['index'];
+    final teamIds = match['teamIds'];
+    final winner = match['winnerTeamId'];
+    final isBye = match['isBye'];
+    if (id is! String ||
+        round is! int ||
+        index is! int ||
+        teamIds is! List ||
+        teamIds.length != 2 ||
+        teamIds.any((team) => team != null && team is! String) ||
+        winner != null && winner is! String ||
+        isBye is! bool) {
+      return null;
+    }
+    matches.add(
+      KnockoutMatch(
+        id: id,
+        round: round,
+        index: index,
+        teamIds: List<String?>.from(teamIds),
+        winnerTeamId: winner,
+        isBye: isBye,
+      ),
+    );
+  }
+  if (matches.isEmpty) return null;
+  return KnockoutTournament(
+    drawOrder: drawOrder,
+    bracketSize: bracketSize,
+    matches: List.unmodifiable(matches),
   );
 }
 

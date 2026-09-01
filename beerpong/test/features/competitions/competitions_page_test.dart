@@ -220,6 +220,83 @@ void main() {
     expect(find.text('Lost games'), findsNothing);
   });
 
+  testWidgets('generates and plays a knockout bracket from the details tabs', (
+    tester,
+  ) async {
+    final controller = _controllerWithCompetitions();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompetitionsPage(controller: controller, teams: _teams),
+      ),
+    );
+
+    await tester.tap(find.text('Summer Cup'));
+    await tester.pumpAndSettle();
+    expect(find.text('Info'), findsOneWidget);
+    expect(find.text('Tournament'), findsOneWidget);
+    expect(find.text('Generate tournament'), findsOneWidget);
+
+    await tester.tap(find.text('Tournament'));
+    await tester.pumpAndSettle();
+    expect(find.text('No tournament generated yet.'), findsOneWidget);
+    await tester.tap(find.text('Info'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Generate tournament'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tournament'));
+    await tester.pumpAndSettle();
+    expect(find.text('Final'), findsOneWidget);
+    expect(find.text('Confirm winner'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Confirm winner').last,
+          )
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byType(Radio<String>).first);
+    await tester.pump();
+    await tester.tap(find.text('Confirm winner'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Winner:'), findsNWidgets(2));
+    expect(
+      controller.competitions
+          .firstWhere((competition) => competition.id == 'summer-cup')
+          .tournament!
+          .isComplete,
+      isTrue,
+    );
+  });
+
+  testWidgets('keeps the details tabs usable on narrow screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = _controllerWithCompetitions();
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompetitionDetailsPage(
+          competitionId: 'summer-cup',
+          controller: controller,
+          teams: _teams,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Info'), findsOneWidget);
+    expect(find.text('Tournament'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('manages memberships with cancellation and live team counts', (
     tester,
   ) async {

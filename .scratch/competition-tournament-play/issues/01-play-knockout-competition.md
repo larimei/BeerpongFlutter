@@ -4,11 +4,15 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A competition with at least two assigned teams can generate a knockout tournament from its Info tab; the Tournament tab has a clear empty state before generation.
-- [ ] Generated brackets use a random, persisted draw order, create required byes up to the next power of two, and display known and future matches in their correct knockout stages.
-- [ ] Each playable match permits exactly one selected winner; confirming it records the outcome and advances that team only after confirmation.
-- [ ] Future matches remain visible but cannot be decided until both participants are known, and the competition completes automatically when its final is confirmed.
-- [ ] Automated domain/controller and widget tests cover two teams, non-power-of-two team counts, byes, winner advancement, and completion.
-- [ ] Formatting, static analysis, and all relevant tests pass.
+- [x] A competition with at least two assigned teams can generate a knockout tournament from its Info tab; the Tournament tab has a clear empty state before generation.
+- [x] Generated brackets use a random, persisted draw order, create required byes up to the next power of two, and display known and future matches in their correct knockout stages.
+- [x] Each playable match permits exactly one selected winner; confirming it records the outcome and advances that team only after confirmation.
+- [x] Future matches remain visible but cannot be decided until both participants are known, and the competition completes automatically when its final is confirmed.
+- [x] Automated domain/controller and widget tests cover two teams, non-power-of-two team counts, byes, winner advancement, and completion.
+- [x] Formatting, static analysis, and all relevant tests pass.
+
+## Answer
+
+Implemented knockout tournament generation, persisted random draw order and bracket state, automatic byes, locked future matches, confirmed winner advancement, completion, and Info/Tournament tabs. Added controller/domain, persistence, and widget-flow coverage; `flutter test` and `flutter analyze` pass.

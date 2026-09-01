@@ -6,6 +6,7 @@ import '../../../app/widgets/entity_selection.dart';
 import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
 import '../domain/competition.dart';
+import 'widgets/knockout_tournament_tab.dart';
 
 class CompetitionDetailsPage extends StatelessWidget {
   const CompetitionDetailsPage({
@@ -25,15 +26,32 @@ class CompetitionDetailsPage extends StatelessWidget {
       animation: controller,
       builder: (context, child) {
         final competition = controller.competitionById(competitionId);
-        return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: competition?.color ?? const Color(0xFFF0FAF9),
-            title: const Text('Competition details'),
-          ),
-          body: competition == null
-              ? const Center(child: Text('Competition no longer exists'))
-              : Container(
+        if (competition == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Competition details')),
+            body: const Center(child: Text('Competition no longer exists')),
+          );
+        }
+        final assignedTeams = teams
+            .where((team) => competition.teamIds.contains(team.id))
+            .toList();
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              backgroundColor: competition.color,
+              title: const Text('Competition details'),
+              bottom: const TabBar(
+                tabs: [
+                  Tab(text: 'Info'),
+                  Tab(text: 'Tournament'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                Container(
                   key: const Key('competition-details-background'),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -53,19 +71,32 @@ class CompetitionDetailsPage extends StatelessWidget {
                     surfaceKey: const Key('competition-details-surface'),
                     avatarKey: const Key('competition-avatar'),
                     iconKey: const Key('competition-details-icon'),
+                    topPadding: 0,
+                    cardTopMargin: 24,
                     additionalContent: _CompetitionInformation(
                       competition: competition,
-                      assignedTeams: teams
-                          .where(
-                            (team) => competition.teamIds.contains(team.id),
-                          )
-                          .toList(),
+                      assignedTeams: assignedTeams,
                       onManageTeams: () => _manageTeams(context, competition),
+                      onGenerateTournament: () =>
+                          controller.generateKnockoutTournament(competition.id),
                     ),
                     onEdit: () => _editCompetition(context, competition),
                     onDelete: () => _deleteCompetition(context, competition),
                   ),
                 ),
+                KnockoutTournamentTab(
+                  competition: competition,
+                  teams: assignedTeams,
+                  onConfirmWinner: (matchId, winnerTeamId) =>
+                      controller.confirmKnockoutMatchWinner(
+                        competitionId: competition.id,
+                        matchId: matchId,
+                        winnerTeamId: winnerTeamId,
+                      ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -175,11 +206,13 @@ class _CompetitionInformation extends StatelessWidget {
     required this.competition,
     required this.assignedTeams,
     required this.onManageTeams,
+    required this.onGenerateTournament,
   });
 
   final Competition competition;
   final List<Team> assignedTeams;
   final VoidCallback onManageTeams;
+  final VoidCallback onGenerateTournament;
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +250,28 @@ class _CompetitionInformation extends StatelessWidget {
             label: const Text('Add or remove teams'),
           ),
         ),
-        const SizedBox(height: 16),
+        if (competition.mode == TournamentMode.knockout) ...[
+          if (competition.tournament == null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: assignedTeams.length >= 2
+                    ? onGenerateTournament
+                    : null,
+                icon: const Icon(Icons.account_tree_outlined),
+                label: const Text('Generate tournament'),
+              ),
+            )
+          else
+            const Text('Tournament bracket generated'),
+          if (assignedTeams.length < 2 && competition.tournament == null)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Assign at least two teams to generate a tournament.',
+              ),
+            ),
+        ],
         _InformationRow(
           label: 'Competition color',
           value: Container(

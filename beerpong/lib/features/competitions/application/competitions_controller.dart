@@ -50,8 +50,50 @@ class CompetitionsController extends ChangeNotifier {
     final currentCompetition = _repository.getById(id);
     if (currentCompetition == null) return false;
     _repository.update(
-      currentCompetition.copyWith(teamIds: List.unmodifiable(teamIds.toSet())),
+      currentCompetition.copyWith(
+        teamIds: List.unmodifiable(teamIds.toSet()),
+        clearTournament: currentCompetition.tournament != null,
+      ),
     );
+    _refresh();
+    return true;
+  }
+
+  bool generateKnockoutTournament(String competitionId) {
+    final competition = _repository.getById(competitionId);
+    if (competition == null ||
+        competition.mode != TournamentMode.knockout ||
+        competition.teamIds.length < 2 ||
+        competition.tournament != null) {
+      return false;
+    }
+    _repository.update(
+      competition.copyWith(
+        tournament: KnockoutTournament.generate(competition.teamIds),
+      ),
+    );
+    _refresh();
+    return true;
+  }
+
+  bool confirmKnockoutMatchWinner({
+    required String competitionId,
+    required String matchId,
+    required String winnerTeamId,
+  }) {
+    final competition = _repository.getById(competitionId);
+    final tournament = competition?.tournament;
+    if (competition == null ||
+        competition.mode != TournamentMode.knockout ||
+        tournament == null) {
+      return false;
+    }
+    final updatedTournament = tournament.confirmWinner(
+      matchId: matchId,
+      winnerTeamId: winnerTeamId,
+    );
+    if (identical(updatedTournament, tournament)) return false;
+    _repository.update(competition.copyWith(tournament: updatedTournament));
     _refresh();
     return true;
   }
@@ -66,7 +108,12 @@ class CompetitionsController extends ChangeNotifier {
     final currentCompetition = _repository.getById(id);
     if (trimmedName.isEmpty || currentCompetition == null) return false;
     _repository.update(
-      currentCompetition.copyWith(name: trimmedName, mode: mode, color: color),
+      currentCompetition.copyWith(
+        name: trimmedName,
+        mode: mode,
+        color: color,
+        clearTournament: mode != TournamentMode.knockout,
+      ),
     );
     _refresh();
     return true;
@@ -80,6 +127,7 @@ class CompetitionsController extends ChangeNotifier {
           teamIds: List.unmodifiable(
             competition.teamIds.where((id) => id != teamId),
           ),
+          clearTournament: competition.tournament != null,
         ),
       );
     }

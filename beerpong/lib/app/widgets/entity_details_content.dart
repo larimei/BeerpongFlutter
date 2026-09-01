@@ -17,6 +17,8 @@ class EntityDetailsContent extends StatelessWidget {
     this.avatarKey,
     this.iconKey,
     this.additionalContent,
+    this.topPadding = 32,
+    this.cardTopMargin = 48,
     super.key,
   });
 
@@ -33,6 +35,8 @@ class EntityDetailsContent extends StatelessWidget {
   final Key? avatarKey;
   final Key? iconKey;
   final Widget? additionalContent;
+  final double topPadding;
+  final double cardTopMargin;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,7 @@ class EntityDetailsContent extends StatelessWidget {
     final lostFraction = totalGames == 0 ? 0.0 : lost / totalGames;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      padding: EdgeInsets.fromLTRB(24, topPadding, 24, 24),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
@@ -50,7 +54,7 @@ class EntityDetailsContent extends StatelessWidget {
             alignment: Alignment.topCenter,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 48),
+                padding: EdgeInsets.only(top: cardTopMargin),
                 child: Card(
                   key: surfaceKey,
                   color: Colors.white,
