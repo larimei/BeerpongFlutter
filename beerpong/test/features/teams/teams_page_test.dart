@@ -51,8 +51,8 @@ void main() {
     expect(find.text('Team details'), findsOneWidget);
     expect(find.text('Alice'), findsOneWidget);
     expect(find.text('No players in this team'), findsNothing);
-    expect(find.text('Won games'), findsOneWidget);
-    expect(find.text('Lost games'), findsOneWidget);
+    expect(find.text('Wins'), findsOneWidget);
+    expect(find.text('Losses'), findsOneWidget);
     expect(find.text('Delete team'), findsOneWidget);
   });
 

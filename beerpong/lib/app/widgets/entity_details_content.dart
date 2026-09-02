@@ -40,10 +40,6 @@ class EntityDetailsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalGames = won + lost;
-    final wonFraction = totalGames == 0 ? 0.0 : won / totalGames;
-    final lostFraction = totalGames == 0 ? 0.0 : lost / totalGames;
-
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(24, topPadding, 24, 24),
       child: Center(
@@ -80,19 +76,7 @@ class EntityDetailsContent extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 20),
-                          StatisticBar(
-                            label: 'Won games',
-                            value: won,
-                            fraction: wonFraction,
-                            color: Colors.amber.shade600,
-                          ),
-                          const SizedBox(height: 20),
-                          StatisticBar(
-                            label: 'Lost games',
-                            value: lost,
-                            fraction: lostFraction,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                          StatisticBar(wins: won, losses: lost),
                         ],
                         const SizedBox(height: 32),
                         FilledButton.icon(

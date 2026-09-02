@@ -115,15 +115,15 @@ void main() {
         grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
     expect(delegate.crossAxisCount, 2);
     expect(delegate.childAspectRatio, 1);
-    expect(find.text('Won games'), findsNothing);
-    expect(find.text('Lost games'), findsNothing);
+    expect(find.text('Wins'), findsNothing);
+    expect(find.text('Losses'), findsNothing);
     expect(find.text('Delete player'), findsNothing);
 
     await tester.tap(find.text('Lara'));
     await tester.pumpAndSettle();
     expect(find.text('Player details'), findsOneWidget);
-    expect(find.text('Won games'), findsOneWidget);
-    expect(find.text('Lost games'), findsOneWidget);
+    expect(find.text('Wins'), findsOneWidget);
+    expect(find.text('Losses'), findsOneWidget);
     expect(find.text('0'), findsNWidgets(2));
     expect(find.text('Delete player'), findsOneWidget);
     expect(find.byKey(const Key('player-details-surface')), findsOneWidget);

@@ -216,8 +216,8 @@ void main() {
     expect(find.byType(Chip), findsNWidgets(2));
     expect(find.text('Competition color'), findsOneWidget);
     expect(find.byKey(const Key('competition-color-preview')), findsOneWidget);
-    expect(find.text('Won games'), findsNothing);
-    expect(find.text('Lost games'), findsNothing);
+    expect(find.text('Wins'), findsNothing);
+    expect(find.text('Losses'), findsNothing);
   });
 
   testWidgets('generates and plays a knockout bracket from the details tabs', (
