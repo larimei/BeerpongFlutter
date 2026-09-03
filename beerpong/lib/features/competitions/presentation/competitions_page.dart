@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/widgets/entity_card.dart';
 import '../../teams/domain/team.dart';
 import '../application/competitions_controller.dart';
+import '../domain/competition.dart';
 import 'competition_details_page.dart';
 
 class CompetitionsPage extends StatelessWidget {
@@ -57,13 +58,11 @@ class CompetitionsPage extends StatelessWidget {
                 name: competition.name,
                 color: competition.color,
                 icon: Icons.emoji_events_outlined,
-                additionalContent: EntityCardText(
-                  text:
+                additionalContent: _CompetitionCardDetails(
+                  summary:
                       '${competition.mode.label} · $teamCount '
                       '${teamCount == 1 ? 'team' : 'teams'}',
-                  fontSize: 12,
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  status: _tournamentStatus(competition),
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -82,6 +81,47 @@ class CompetitionsPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CompetitionCardDetails extends StatelessWidget {
+  const _CompetitionCardDetails({required this.summary, required this.status});
+
+  final String summary;
+  final String status;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Expanded(
+        child: EntityCardText(
+          text: summary,
+          fontSize: 12,
+          maxLines: 1,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ),
+      const SizedBox(height: 2),
+      Expanded(
+        child: EntityCardText(
+          text: status,
+          fontSize: 12,
+          maxLines: 1,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ),
+    ],
+  );
+}
+
+String _tournamentStatus(Competition competition) {
+  final isComplete = competition.mode == TournamentMode.knockout
+      ? competition.tournament?.isComplete == true
+      : competition.roundRobinTournament?.isComplete == true;
+  if (isComplete) return 'Completed';
+  final hasTournament = competition.mode == TournamentMode.knockout
+      ? competition.tournament != null
+      : competition.roundRobinTournament != null;
+  return hasTournament ? 'Ongoing' : 'Not started';
 }
 
 class _EmptyCompetitions extends StatelessWidget {

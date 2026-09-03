@@ -145,8 +145,9 @@ void main() {
     );
     expect(card.color, const Color(0xFFFFD95A));
     expect(card.icon, Icons.emoji_events_outlined);
-    expect(card.additionalContent, isA<EntityCardText>());
+    expect(card.additionalContent, isNotNull);
     expect(card.onTap, isNotNull);
+    expect(find.text('Not started'), findsOneWidget);
     final cardSize = tester.getSize(find.byType(EntityCard));
     expect(cardSize.width, cardSize.height);
     final grid = tester.widget<GridView>(find.byType(GridView));
@@ -168,6 +169,7 @@ void main() {
     expect(find.text('First Cup'), findsNWidgets(2));
     expect(find.text('Knockout · 0 teams'), findsOneWidget);
     expect(find.text('Round robin · 0 teams'), findsOneWidget);
+    expect(find.text('Not started'), findsNWidgets(2));
   });
 
   testWidgets('empty state and add form remain usable on mobile web', (
@@ -191,6 +193,61 @@ void main() {
     expect(find.text('Add competition'), findsOneWidget);
     expect(find.byKey(const Key('competition-mode')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shows the tournament status on competition cards', (
+    tester,
+  ) async {
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'not-started',
+          name: 'Not started Cup',
+          mode: TournamentMode.knockout,
+          color: Colors.amber,
+        ),
+        Competition(
+          id: 'ongoing',
+          name: 'Ongoing League',
+          mode: TournamentMode.roundRobin,
+          color: Colors.blue,
+          roundRobinTournament: RoundRobinTournament(
+            drawOrder: ['red', 'blue'],
+            matches: [
+              RoundRobinMatch(id: 'game-0', teamIds: ['red', 'blue']),
+            ],
+          ),
+        ),
+        Competition(
+          id: 'completed',
+          name: 'Completed Cup',
+          mode: TournamentMode.knockout,
+          color: Colors.green,
+          tournament: KnockoutTournament(
+            drawOrder: ['red', 'blue'],
+            bracketSize: 2,
+            matches: [
+              KnockoutMatch(
+                id: 'round-0-match-0',
+                round: 0,
+                index: 0,
+                teamIds: ['red', 'blue'],
+                winnerTeamId: 'red',
+              ),
+            ],
+          ),
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: CompetitionsPage(controller: controller)),
+    );
+
+    expect(find.text('Not started'), findsOneWidget);
+    expect(find.text('Ongoing'), findsOneWidget);
+    expect(find.text('Completed'), findsOneWidget);
   });
 
   testWidgets('opens competition details without artificial statistics', (
