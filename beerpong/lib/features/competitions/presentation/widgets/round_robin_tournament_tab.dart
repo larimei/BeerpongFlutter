@@ -52,12 +52,15 @@ class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
         children: [
           if (tournament.isComplete)
             Card(
-              color: Colors.amber.shade100,
+              color: widget.competition.color,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.emoji_events_outlined),
+                    Icon(
+                      Icons.emoji_events_outlined,
+                      color: Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

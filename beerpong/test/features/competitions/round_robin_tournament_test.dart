@@ -419,6 +419,11 @@ void main() {
     expect(find.text('Winner: Red'), findsOneWidget);
     expect(find.text('1 wins'), findsOneWidget);
     expect(find.byIcon(Icons.emoji_events_outlined), findsOneWidget);
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.emoji_events_outlined)).color,
+      Colors.amber.shade700,
+    );
+    expect(tester.widgetList<Card>(find.byType(Card)).first.color, Colors.blue);
     expect(find.text('Correct result'), findsOneWidget);
     await tester.tap(find.text('Correct result'));
     await tester.pumpAndSettle();
