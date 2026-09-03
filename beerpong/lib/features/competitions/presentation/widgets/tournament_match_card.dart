@@ -39,11 +39,17 @@ class TournamentMatchCard extends StatelessWidget {
                   teamId: teamIds.first,
                   names: names,
                   colors: colors,
+                  alignment: Alignment.centerLeft,
                 ),
               ),
               const SizedBox(width: 8),
               const Expanded(
-                child: _TeamBox(teamId: null, names: {}, emptyLabel: 'Freilos'),
+                child: _TeamBox(
+                  teamId: null,
+                  names: {},
+                  emptyLabel: 'Freilos',
+                  alignment: Alignment.centerRight,
+                ),
               ),
             ],
           ),
@@ -73,6 +79,7 @@ class TournamentMatchCard extends StatelessWidget {
                     teamId: teamIds.first,
                     names: names,
                     colors: colors,
+                    alignment: Alignment.centerLeft,
                     selected: selectedWinnerId == teamIds.first,
                     onSelected: () => onWinnerSelected(teamIds.first!),
                   ),
@@ -86,6 +93,7 @@ class TournamentMatchCard extends StatelessWidget {
                     teamId: teamIds.last,
                     names: names,
                     colors: colors,
+                    alignment: Alignment.centerRight,
                     selected: selectedWinnerId == teamIds.last,
                     onSelected: () => onWinnerSelected(teamIds.last!),
                   ),
@@ -93,18 +101,10 @@ class TournamentMatchCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: selectedWinnerId == null ? null : onConfirm,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  side: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                child: const Text('Confirm winner'),
-              ),
+            _actionButton(
+              context,
+              label: 'Confirm winner',
+              onPressed: selectedWinnerId == null ? null : onConfirm,
             ),
           ],
         ),
@@ -131,13 +131,30 @@ class TournamentMatchCard extends StatelessWidget {
           ),
           if (onCorrectResult != null) ...[
             const SizedBox(height: 8),
-            TextButton(
+            _actionButton(
+              context,
+              label: 'Correct result',
               onPressed: onCorrectResult,
-              child: const Text('Correct result'),
             ),
           ],
         ],
       ),
+    ),
+  );
+
+  Widget _actionButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback? onPressed,
+  }) => SizedBox(
+    width: double.infinity,
+    child: OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        side: BorderSide(color: Theme.of(context).colorScheme.primary),
+      ),
+      child: Text(label),
     ),
   );
 }
@@ -162,12 +179,12 @@ class _MatchTeams extends StatelessWidget {
     children: [
       Row(
         children: [
-          Expanded(child: _box(teamIds.first)),
+          Expanded(child: _box(teamIds.first, Alignment.centerLeft)),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Text('vs'),
           ),
-          Expanded(child: _box(teamIds.last)),
+          Expanded(child: _box(teamIds.last, Alignment.centerRight)),
         ],
       ),
       if (subtitle != null) ...[
@@ -177,10 +194,11 @@ class _MatchTeams extends StatelessWidget {
     ],
   );
 
-  Widget _box(String? teamId) => _TeamBox(
+  Widget _box(String? teamId, Alignment alignment) => _TeamBox(
     teamId: teamId,
     names: names,
     colors: colors,
+    alignment: alignment,
     selected: winnerId == teamId,
   );
 }
@@ -193,6 +211,7 @@ class _TeamBox extends StatelessWidget {
     this.selected = false,
     this.emptyLabel = 'To be decided',
     this.onSelected,
+    this.alignment = Alignment.center,
   });
 
   final String? teamId;
@@ -201,6 +220,7 @@ class _TeamBox extends StatelessWidget {
   final bool selected;
   final String emptyLabel;
   final VoidCallback? onSelected;
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +243,7 @@ class _TeamBox extends StatelessWidget {
       child: InkWell(
         onTap: onSelected,
         borderRadius: BorderRadius.circular(20),
-        child: Center(child: chip),
+        child: Align(alignment: alignment, child: chip),
       ),
     );
   }

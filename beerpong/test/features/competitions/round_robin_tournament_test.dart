@@ -222,6 +222,72 @@ void main() {
     expect(find.text('To be decided'), findsNothing);
     expect(find.byType(Chip), findsNWidgets(2));
     expect(find.byType(Radio<String>), findsNothing);
+    final cardRect = tester.getRect(find.byType(Card));
+    final chips = find.byType(Chip);
+    expect(
+      tester.getRect(chips.first).left,
+      moreOrLessEquals(cardRect.left + 16),
+    );
+    expect(
+      tester.getRect(chips.last).right,
+      moreOrLessEquals(cardRect.right - 16),
+    );
+  });
+
+  testWidgets('uses the full-width winner action style for corrections', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TournamentMatchCard(
+            teamIds: const ['red', 'blue'],
+            names: const {'red': 'Red', 'blue': 'Blue'},
+            colors: const {'red': Colors.red, 'blue': Colors.blue},
+            selectedWinnerId: null,
+            onWinnerSelected: (_) {},
+            onConfirm: () {},
+            winnerTeamId: 'red',
+            onCorrectResult: () {},
+          ),
+        ),
+      ),
+    );
+
+    final button = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, 'Correct result'),
+    );
+    expect(button.onPressed, isNotNull);
+    expect(button.style, isNotNull);
+    expect(
+      tester
+          .getRect(find.widgetWithText(OutlinedButton, 'Correct result'))
+          .width,
+      greaterThan(300),
+    );
+  });
+
+  testWidgets('uses the full placeholder label for undecided teams', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TournamentMatchCard(
+            teamIds: const [null, null],
+            names: const {},
+            colors: const {},
+            selectedWinnerId: null,
+            onWinnerSelected: (_) {},
+            onConfirm: () {},
+            isPlayable: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('To be decided'), findsNWidgets(2));
+    expect(find.text('To be'), findsNothing);
   });
 
   testWidgets('plays a game and shows the completed winner', (tester) async {
