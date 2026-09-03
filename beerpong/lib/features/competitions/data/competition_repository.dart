@@ -1,4 +1,5 @@
 import '../domain/competition.dart';
+import '../../../app/data/in_memory_repository.dart';
 
 abstract interface class CompetitionRepository {
   List<Competition> getAll();
@@ -14,40 +15,9 @@ abstract interface class CompetitionRepository {
   void clear();
 }
 
-class InMemoryCompetitionRepository implements CompetitionRepository {
+class InMemoryCompetitionRepository extends InMemoryRepository<Competition>
+    implements CompetitionRepository {
   InMemoryCompetitionRepository([
     Iterable<Competition> initialCompetitions = const [],
-  ]) : _competitions = List.of(initialCompetitions);
-
-  final List<Competition> _competitions;
-
-  @override
-  List<Competition> getAll() => List.unmodifiable(_competitions);
-
-  @override
-  Competition? getById(String id) {
-    for (final competition in _competitions) {
-      if (competition.id == id) return competition;
-    }
-    return null;
-  }
-
-  @override
-  void add(Competition competition) => _competitions.add(competition);
-
-  @override
-  void update(Competition competition) {
-    final index = _competitions.indexWhere(
-      (candidate) => candidate.id == competition.id,
-    );
-    if (index != -1) _competitions[index] = competition;
-  }
-
-  @override
-  void delete(String id) {
-    _competitions.removeWhere((competition) => competition.id == id);
-  }
-
-  @override
-  void clear() => _competitions.clear();
+  ]) : super(initialCompetitions, idOf: (competition) => competition.id);
 }

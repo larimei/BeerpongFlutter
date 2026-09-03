@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/data/entity_name_generator.dart';
 import '../../../../app/widgets/entity_add_form.dart';
 import '../../../../app/widgets/entity_selection.dart';
+import '../../../../app/widgets/generated_entity_name.dart';
+import '../../../../app/data/entity_name_generator.dart';
 import '../../../teams/domain/team.dart';
 import '../../domain/competition.dart';
+import 'tournament_mode_field.dart';
 
 class NewCompetition {
   const NewCompetition({
@@ -39,24 +41,12 @@ class AddCompetitionForm extends StatefulWidget {
 class _AddCompetitionFormState extends State<AddCompetitionForm> {
   TournamentMode _selectedMode = TournamentMode.knockout;
   Set<String> _selectedTeamIds = {};
-  late final Future<String> _initialName;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialName = EntityNameGenerator().randomName(EntityNameType.competition);
-  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _initialName,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData && !snapshot.hasError) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return _buildForm(snapshot.data ?? '');
-      },
+    return GeneratedEntityName(
+      type: EntityNameType.competition,
+      builder: (context, initialName) => _buildForm(initialName),
     );
   }
 
@@ -73,25 +63,10 @@ class _AddCompetitionFormState extends State<AddCompetitionForm> {
       additionalFields: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<TournamentMode>(
+          tournamentModeField(
             key: const Key('competition-mode'),
-            initialValue: _selectedMode,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              filled: true,
-              fillColor: Colors.white,
-              labelText: 'Tournament mode',
-            ),
-            items: TournamentMode.values
-                .map(
-                  (mode) =>
-                      DropdownMenuItem(value: mode, child: Text(mode.label)),
-                )
-                .toList(),
-            onChanged: (mode) {
-              if (mode != null) setState(() => _selectedMode = mode);
-            },
+            value: _selectedMode,
+            onChanged: (mode) => setState(() => _selectedMode = mode),
           ),
           const SizedBox(height: 24),
           EntitySelectionField<Team>(

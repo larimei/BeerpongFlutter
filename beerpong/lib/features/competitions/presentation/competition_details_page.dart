@@ -9,6 +9,7 @@ import '../application/competitions_controller.dart';
 import '../domain/competition.dart';
 import 'widgets/knockout_tournament_tab.dart';
 import 'widgets/round_robin_tournament_tab.dart';
+import 'widgets/tournament_mode_field.dart';
 
 class CompetitionDetailsPage extends StatelessWidget {
   const CompetitionDetailsPage({
@@ -179,27 +180,10 @@ class CompetitionDetailsPage extends StatelessWidget {
           icon: Icons.emoji_events_outlined,
           colorPickerIconKey: const Key('color-picker-competition-icon'),
           colorPickerWheelKey: const Key('competition-color-wheel'),
-          additionalFields: DropdownButtonFormField<TournamentMode>(
+          additionalFields: tournamentModeField(
             key: const Key('edit-competition-mode'),
-            initialValue: selectedMode,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              filled: true,
-              fillColor: Colors.white,
-              labelText: 'Tournament mode',
-            ),
-            items: TournamentMode.values
-                .map(
-                  (mode) =>
-                      DropdownMenuItem(value: mode, child: Text(mode.label)),
-                )
-                .toList(),
-            onChanged: (mode) {
-              if (mode != null) {
-                setDialogState(() => selectedMode = mode);
-              }
-            },
+            value: selectedMode,
+            onChanged: (mode) => setDialogState(() => selectedMode = mode),
           ),
         ),
       ),

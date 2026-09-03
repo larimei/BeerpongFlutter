@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/data/entity_name_generator.dart';
 import '../../../../app/widgets/entity_add_form.dart';
 import '../../../../app/widgets/entity_selection.dart';
+import '../../../../app/widgets/generated_entity_name.dart';
+import '../../../../app/data/entity_name_generator.dart';
 import '../../../players/domain/player.dart';
 
 class NewTeam {
@@ -35,24 +36,12 @@ class AddTeamForm extends StatefulWidget {
 
 class _AddTeamFormState extends State<AddTeamForm> {
   Set<String> _selectedPlayerIds = {};
-  late final Future<String> _initialName;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialName = EntityNameGenerator().randomName(EntityNameType.team);
-  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _initialName,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData && !snapshot.hasError) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return _buildForm(snapshot.data ?? '');
-      },
+    return GeneratedEntityName(
+      type: EntityNameType.team,
+      builder: (context, initialName) => _buildForm(initialName),
     );
   }
 

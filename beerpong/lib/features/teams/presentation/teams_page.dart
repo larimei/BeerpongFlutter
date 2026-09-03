@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_card.dart';
+import '../../../app/widgets/entity_overview.dart';
 import '../../players/application/players_controller.dart';
 import '../../players/domain/player.dart';
 import '../../competitions/application/competitions_controller.dart';
@@ -23,32 +24,21 @@ class TeamsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0FAF9),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF0FAF9),
-        title: const Text('Teams'),
-        actions: [
-          IconButton(
-            onPressed: onOpenSettings,
-            tooltip: 'Settings',
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
+    return EntityOverviewScaffold(
+      title: 'Teams',
+      onOpenSettings: onOpenSettings,
       body: ListenableBuilder(
         listenable: Listenable.merge([controller, playersController]),
         builder: (context, child) {
           final teams = controller.teams;
-          if (teams.isEmpty) return const _EmptyTeams();
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-            ),
+          if (teams.isEmpty) {
+            return const EmptyEntityState(
+              icon: Icons.groups_outlined,
+              title: 'No teams yet',
+              message: 'Add your first team to start building the tournament.',
+            );
+          }
+          return EntityGrid(
             itemCount: teams.length,
             itemBuilder: (context, index) {
               final team = teams[index];
@@ -115,39 +105,6 @@ class _TeamMemberSummary extends StatelessWidget {
             ),
           )
           .toList(),
-    );
-  }
-}
-
-class _EmptyTeams extends StatelessWidget {
-  const _EmptyTeams();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.groups_outlined,
-              size: 72,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'No teams yet',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Add your first team to start building the tournament.',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
