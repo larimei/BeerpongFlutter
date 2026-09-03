@@ -19,14 +19,17 @@ class CompetitionStatistics {
             :final teamIds,
             :final winnerTeamId,
             :final playerIdsByTeam,
+            :final isBye,
           ):
-            _record(
-              teamIds.whereType<String>(),
-              winnerTeamId,
-              playerIdsByTeam,
-              teamRecords,
-              playerRecords,
-            );
+            if (!isBye) {
+              _record(
+                teamIds.whereType<String>(),
+                winnerTeamId,
+                playerIdsByTeam,
+                teamRecords,
+                playerRecords,
+              );
+            }
           case RoundRobinMatch(
             :final teamIds,
             :final winnerTeamId,

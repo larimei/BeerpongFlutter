@@ -34,4 +34,35 @@ void main() {
     expect(statistics.forPlayer('player-2'), const GameRecord(won: 1, lost: 0));
     expect(statistics.forPlayer('player-3'), const GameRecord(won: 0, lost: 1));
   });
+
+  test('does not count a bye as a team or player win', () {
+    const competition = Competition(
+      id: 'cup',
+      name: 'Cup',
+      mode: TournamentMode.knockout,
+      color: Colors.amber,
+      tournament: KnockoutTournament(
+        drawOrder: ['red'],
+        bracketSize: 2,
+        matches: [
+          KnockoutMatch(
+            id: 'round-0-match-0',
+            round: 0,
+            index: 0,
+            teamIds: ['red', null],
+            winnerTeamId: 'red',
+            isBye: true,
+            playerIdsByTeam: {
+              'red': ['player-1'],
+            },
+          ),
+        ],
+      ),
+    );
+
+    final statistics = CompetitionStatistics.fromCompetitions([competition]);
+
+    expect(statistics.forTeam('red'), GameRecord.zero);
+    expect(statistics.forPlayer('player-1'), GameRecord.zero);
+  });
 }
