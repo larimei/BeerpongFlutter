@@ -330,6 +330,32 @@ void main() {
     );
   });
 
+  testWidgets('keeps the game card height after confirming a winner', (
+    tester,
+  ) async {
+    Widget game({String? winnerTeamId, VoidCallback? onCorrectResult}) =>
+        MaterialApp(
+          home: Scaffold(
+            body: TournamentMatchCard(
+              teamIds: const ['red', 'blue'],
+              names: const {'red': 'Red', 'blue': 'Blue'},
+              colors: const {'red': Colors.red, 'blue': Colors.blue},
+              selectedWinnerId: null,
+              onWinnerSelected: (_) {},
+              onConfirm: () {},
+              winnerTeamId: winnerTeamId,
+              onCorrectResult: onCorrectResult,
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(game());
+    final openHeight = tester.getSize(find.byType(Card)).height;
+    await tester.pumpWidget(game(winnerTeamId: 'red', onCorrectResult: () {}));
+
+    expect(tester.getSize(find.byType(Card)).height, openHeight);
+  });
+
   testWidgets('uses the full placeholder label for undecided teams', (
     tester,
   ) async {

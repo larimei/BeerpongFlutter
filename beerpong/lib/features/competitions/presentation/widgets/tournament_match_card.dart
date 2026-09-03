@@ -119,7 +119,7 @@ class TournamentMatchCard extends StatelessWidget {
     VoidCallback? onCorrectResult,
   }) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       child: Column(
         children: [
           _MatchTeams(
