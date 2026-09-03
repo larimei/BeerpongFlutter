@@ -22,7 +22,7 @@ class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.snapshot, required this.store});
 
   final AppSnapshot snapshot;
-  final BrowserAppStateStore store;
+  final AppStateStore store;
 
   @override
   State<AppShell> createState() => _AppShellState();

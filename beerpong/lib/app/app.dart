@@ -11,7 +11,7 @@ class BeerpongApp extends StatelessWidget {
   });
 
   final AppSnapshot snapshot;
-  final BrowserAppStateStore store;
+  final AppStateStore store;
 
   @override
   Widget build(BuildContext context) {
