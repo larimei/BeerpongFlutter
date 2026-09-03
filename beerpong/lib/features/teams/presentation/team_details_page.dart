@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
+import '../../../app/widgets/collapsible_chip_list.dart';
 import '../../../app/widgets/entity_delete_dialog.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
 import '../../../app/widgets/entity_selection.dart';
@@ -157,9 +158,7 @@ class _TeamMembers extends StatelessWidget {
         if (players.isEmpty)
           const Text('No players in this team')
         else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          CollapsibleChipList(
             children: players
                 .map(
                   (player) => Chip(

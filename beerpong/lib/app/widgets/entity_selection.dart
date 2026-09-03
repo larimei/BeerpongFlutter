@@ -9,6 +9,7 @@ class EntitySelection<T> extends StatelessWidget {
     required this.nameOf,
     required this.emptyMessage,
     required this.onToggle,
+    this.expandToFill = false,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class EntitySelection<T> extends StatelessWidget {
   final String Function(T item) nameOf;
   final String emptyMessage;
   final ValueChanged<String> onToggle;
+  final bool expandToFill;
 
   @override
   Widget build(BuildContext context) {
@@ -29,31 +31,36 @@ class EntitySelection<T> extends StatelessWidget {
         const SizedBox(height: 8),
         if (items.isEmpty)
           Text(emptyMessage)
+        else if (expandToFill)
+          Expanded(child: _selectionList())
         else
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 220),
-            child: ListView(
-              shrinkWrap: true,
-              children: items.map((item) {
-                final id = idOf(item);
-                final name = nameOf(item);
-                final selected = selectedIds.contains(id);
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(name),
-                  trailing: IconButton(
-                    tooltip: selected ? 'Remove $name' : 'Add $name',
-                    onPressed: () => onToggle(id),
-                    icon: Icon(selected ? Icons.delete_outline : Icons.add),
-                  ),
-                );
-              }).toList(),
-            ),
+            child: _selectionList(),
           ),
       ],
     );
   }
+
+  Widget _selectionList() => ListView(
+    key: const Key('entity-selection-list'),
+    shrinkWrap: !expandToFill,
+    children: items.map((item) {
+      final id = idOf(item);
+      final name = nameOf(item);
+      final selected = selectedIds.contains(id);
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        title: Text(name),
+        trailing: IconButton(
+          tooltip: selected ? 'Remove $name' : 'Add $name',
+          onPressed: () => onToggle(id),
+          icon: Icon(selected ? Icons.delete_outline : Icons.add),
+        ),
+      );
+    }).toList(),
+  );
 }
 
 class EntitySelectionField<T> extends StatelessWidget {
@@ -150,30 +157,55 @@ class _EntitySelectionDialogState<T> extends State<EntitySelectionDialog<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: 420,
-        child: EntitySelection<T>(
-          label: widget.label,
-          items: widget.items,
-          selectedIds: _selectedIds,
-          idOf: widget.idOf,
-          nameOf: widget.nameOf,
-          emptyMessage: widget.emptyMessage,
-          onToggle: _toggle,
+    return Dialog(
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 420,
+          maxHeight: MediaQuery.sizeOf(context).height - 48,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                widget.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: EntitySelection<T>(
+                  label: widget.label,
+                  items: widget.items,
+                  selectedIds: _selectedIds,
+                  idOf: widget.idOf,
+                  nameOf: widget.nameOf,
+                  emptyMessage: widget.emptyMessage,
+                  onToggle: _toggle,
+                  expandToFill: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () =>
+                        Navigator.pop(context, _selectedIds.toList()),
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _selectedIds.toList()),
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }

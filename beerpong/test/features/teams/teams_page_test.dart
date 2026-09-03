@@ -12,6 +12,7 @@ import 'package:beerpong/features/teams/application/teams_controller.dart';
 import 'package:beerpong/features/teams/data/team_repository.dart';
 import 'package:beerpong/features/teams/domain/team.dart';
 import 'package:beerpong/features/teams/presentation/teams_page.dart';
+import 'package:beerpong/features/teams/presentation/team_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -491,5 +492,50 @@ void main() {
     );
     expect(card.additionalContent, isA<EntityCardText>());
     expect(find.text('Knockout · 0 teams'), findsOneWidget);
+  });
+
+  testWidgets('collapses long player lists in team details', (tester) async {
+    const team = Team(
+      id: 'team-1',
+      name: 'Crowd',
+      playerIds: ['player-1', 'player-2', 'player-3', 'player-4', 'player-5'],
+      color: Colors.amber,
+    );
+    final competitionsController = CompetitionsController(
+      InMemoryCompetitionRepository(),
+    );
+    final teamsController = TeamsController(
+      InMemoryTeamRepository(const [team]),
+      competitionsController,
+    );
+    final playersController = PlayersController(
+      InMemoryPlayerRepository(const [
+        Player(id: 'player-1', name: 'Player 1', color: Colors.red),
+        Player(id: 'player-2', name: 'Player 2', color: Colors.blue),
+        Player(id: 'player-3', name: 'Player 3', color: Colors.green),
+        Player(id: 'player-4', name: 'Player 4', color: Colors.orange),
+        Player(id: 'player-5', name: 'Player 5', color: Colors.purple),
+      ]),
+      teamsController,
+    );
+    addTearDown(competitionsController.dispose);
+    addTearDown(teamsController.dispose);
+    addTearDown(playersController.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TeamDetailsPage(
+          teamId: team.id,
+          controller: teamsController,
+          playersController: playersController,
+        ),
+      ),
+    );
+
+    expect(find.text('Player 5'), findsNothing);
+    await tester.tap(find.text('Show 1 more'));
+    await tester.pump();
+    expect(find.text('Player 5'), findsOneWidget);
+    expect(find.text('Show less'), findsOneWidget);
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/widgets/entity_details_content.dart';
+import '../../../app/widgets/collapsible_chip_list.dart';
 import '../../../app/widgets/entity_edit_dialog.dart';
 import '../../../app/widgets/entity_selection.dart';
 import '../../teams/domain/team.dart';
@@ -347,9 +348,7 @@ class _CompetitionInformation extends StatelessWidget {
         if (assignedTeams.isEmpty)
           const Text('No teams assigned')
         else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          CollapsibleChipList(
             children: assignedTeams
                 .map(
                   (team) => Chip(
@@ -410,6 +409,7 @@ class _CompetitionInformation extends StatelessWidget {
               ),
             ),
         ],
+        const SizedBox(height: 16),
         _InformationRow(
           label: 'Competition color',
           value: Container(

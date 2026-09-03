@@ -198,6 +198,32 @@ void main() {
     expect(background.decoration, isA<BoxDecoration>());
   });
 
+  testWidgets('uses detail-style team chips and labels bye opponents', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TournamentMatchCard(
+            teamIds: const ['red', null],
+            names: const {'red': 'Red Rockets'},
+            colors: const {'red': Colors.red},
+            selectedWinnerId: null,
+            onWinnerSelected: (_) {},
+            onConfirm: () {},
+            isBye: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Freilos'), findsOneWidget);
+    expect(find.text('BYE'), findsNothing);
+    expect(find.text('To be decided'), findsNothing);
+    expect(find.byType(Chip), findsNWidgets(2));
+    expect(find.byType(Radio<String>), findsNothing);
+  });
+
   testWidgets('plays a game and shows the completed winner', (tester) async {
     final controller = CompetitionsController(
       InMemoryCompetitionRepository(const [
@@ -230,11 +256,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Games'), findsOneWidget);
-    await tester.tap(
-      find.byWidgetPredicate(
-        (widget) => widget is Radio<String> && widget.value == 'red',
-      ),
-    );
+    await tester.tap(find.text('Red').first);
     await tester.pump();
     await tester.tap(find.text('Confirm winner'));
     await tester.pumpAndSettle();

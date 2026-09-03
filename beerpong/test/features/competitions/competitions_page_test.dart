@@ -257,7 +257,7 @@ void main() {
           .onPressed,
       isNull,
     );
-    await tester.tap(find.byType(Radio<String>).first);
+    await tester.tap(find.text('Red Rockets').last);
     await tester.pump();
     await tester.tap(find.text('Confirm winner'));
     await tester.pumpAndSettle();
@@ -454,6 +454,7 @@ void main() {
     await tester.tap(find.text('Summer Cup'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Edit competition'));
     await tester.tap(find.text('Edit competition'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), '   ');
@@ -549,6 +550,63 @@ void main() {
     );
 
     expect(find.text('Competition no longer exists'), findsOneWidget);
+  });
+
+  testWidgets('collapses long team lists and gives selection dialogs room', (
+    tester,
+  ) async {
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'crowded-cup',
+          name: 'Crowded Cup',
+          mode: TournamentMode.knockout,
+          color: Colors.amber,
+          teamIds: ['team-1', 'team-2', 'team-3', 'team-4', 'team-5'],
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+    const teams = [
+      Team(id: 'team-1', name: 'Team 1', playerIds: [], color: Colors.red),
+      Team(id: 'team-2', name: 'Team 2', playerIds: [], color: Colors.blue),
+      Team(id: 'team-3', name: 'Team 3', playerIds: [], color: Colors.green),
+      Team(id: 'team-4', name: 'Team 4', playerIds: [], color: Colors.orange),
+      Team(id: 'team-5', name: 'Team 5', playerIds: [], color: Colors.purple),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompetitionDetailsPage(
+          competitionId: 'crowded-cup',
+          controller: controller,
+          teams: teams,
+        ),
+      ),
+    );
+
+    expect(find.text('Team 1'), findsOneWidget);
+    expect(find.text('Team 4'), findsOneWidget);
+    expect(find.text('Team 5'), findsNothing);
+    expect(find.text('Show 1 more'), findsOneWidget);
+    expect(
+      tester.getRect(find.byKey(const Key('competition-color-preview'))).top -
+          tester
+              .getRect(find.widgetWithText(FilledButton, 'Generate tournament'))
+              .bottom,
+      16,
+    );
+    await tester.tap(find.text('Show 1 more'));
+    await tester.pump();
+    expect(find.text('Team 5'), findsOneWidget);
+    expect(find.text('Show less'), findsOneWidget);
+
+    await tester.tap(find.text('Manage teams'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(find.byKey(const Key('entity-selection-list'))).height,
+      greaterThan(220),
+    );
   });
 }
 

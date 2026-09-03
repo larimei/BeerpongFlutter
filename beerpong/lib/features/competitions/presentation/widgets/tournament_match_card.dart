@@ -41,11 +41,10 @@ class TournamentMatchCard extends StatelessWidget {
                   colors: colors,
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text('BYE'),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: _TeamBox(teamId: null, names: {}, emptyLabel: 'Freilos'),
               ),
-              const Expanded(child: _TeamBox(teamId: null, names: {})),
             ],
           ),
         ),
@@ -67,35 +66,31 @@ class TournamentMatchCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            RadioGroup<String>(
-              groupValue: selectedWinnerId,
-              onChanged: (value) => onWinnerSelected(value!),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _TeamBox(
-                      teamId: teamIds.first,
-                      names: names,
-                      colors: colors,
-                      selected: selectedWinnerId == teamIds.first,
-                      radioValue: teamIds.first,
-                    ),
+            Row(
+              children: [
+                Expanded(
+                  child: _TeamBox(
+                    teamId: teamIds.first,
+                    names: names,
+                    colors: colors,
+                    selected: selectedWinnerId == teamIds.first,
+                    onSelected: () => onWinnerSelected(teamIds.first!),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('vs'),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text('vs'),
+                ),
+                Expanded(
+                  child: _TeamBox(
+                    teamId: teamIds.last,
+                    names: names,
+                    colors: colors,
+                    selected: selectedWinnerId == teamIds.last,
+                    onSelected: () => onWinnerSelected(teamIds.last!),
                   ),
-                  Expanded(
-                    child: _TeamBox(
-                      teamId: teamIds.last,
-                      names: names,
-                      colors: colors,
-                      selected: selectedWinnerId == teamIds.last,
-                      radioValue: teamIds.last,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -196,43 +191,39 @@ class _TeamBox extends StatelessWidget {
     required this.names,
     this.colors = const {},
     this.selected = false,
-    this.radioValue,
+    this.emptyLabel = 'To be decided',
+    this.onSelected,
   });
 
   final String? teamId;
   final Map<String, String> names;
   final Map<String, Color> colors;
   final bool selected;
-  final String? radioValue;
+  final String emptyLabel;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context) {
     final color = teamId == null ? Colors.grey : colors[teamId] ?? Colors.grey;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 52),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: selected ? color : color.withValues(alpha: 0.7),
-          width: selected ? 2 : 1,
-        ),
+    final chip = Chip(
+      avatar: CircleAvatar(backgroundColor: color),
+      label: Text(
+        teamId == null ? emptyLabel : names[teamId] ?? teamId!,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (radioValue != null) Radio<String>(value: radioValue!),
-          Flexible(
-            child: Text(
-              teamId == null ? 'To be decided' : names[teamId] ?? teamId!,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
+      side: BorderSide(
+        color: selected ? color : Theme.of(context).colorScheme.outline,
+        width: selected ? 2 : 1,
+      ),
+    );
+    return Semantics(
+      button: onSelected != null,
+      selected: selected,
+      child: InkWell(
+        onTap: onSelected,
+        borderRadius: BorderRadius.circular(20),
+        child: Center(child: chip),
       ),
     );
   }
