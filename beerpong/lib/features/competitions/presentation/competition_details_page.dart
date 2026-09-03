@@ -121,6 +121,11 @@ class CompetitionDetailsPage extends StatelessWidget {
                               winnerTeamId: winnerTeamId,
                               playerIdsByTeam: _playerIdsByTeam(assignedTeams),
                             ),
+                        onClearResult: (matchId) =>
+                            controller.clearRoundRobinMatchOutcome(
+                              competitionId: competition.id,
+                              matchId: matchId,
+                            ),
                       ),
               ],
             ),

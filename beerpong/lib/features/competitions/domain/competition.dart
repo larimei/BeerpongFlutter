@@ -68,16 +68,23 @@ class RoundRobinTournament {
     Random? random,
   }) {
     final drawOrder = List<String>.of(teamIds)..shuffle(random);
+    final rotation = List<String?>.of(drawOrder);
+    if (rotation.length.isOdd) rotation.add(null);
     final matches = <RoundRobinMatch>[];
-    for (var first = 0; first < drawOrder.length; first++) {
-      for (var second = first + 1; second < drawOrder.length; second++) {
-        matches.add(
-          RoundRobinMatch(
-            id: 'game-${matches.length}',
-            teamIds: [drawOrder[first], drawOrder[second]],
-          ),
-        );
+    for (var round = 0; round < rotation.length - 1; round++) {
+      for (var index = 0; index < rotation.length ~/ 2; index++) {
+        final firstTeam = rotation[index];
+        final secondTeam = rotation[rotation.length - 1 - index];
+        if (firstTeam != null && secondTeam != null) {
+          matches.add(
+            RoundRobinMatch(
+              id: 'game-${matches.length}',
+              teamIds: [firstTeam, secondTeam],
+            ),
+          );
+        }
       }
+      rotation.insert(1, rotation.removeLast());
     }
     return RoundRobinTournament(
       drawOrder: List.unmodifiable(drawOrder),
@@ -169,6 +176,21 @@ class RoundRobinTournament {
                 playerIdsByTeam,
               ),
             )
+          else
+            candidate,
+      ]),
+    );
+  }
+
+  RoundRobinTournament clearOutcome(String matchId) {
+    final match = matches.where((match) => match.id == matchId).firstOrNull;
+    if (match == null || match.winnerTeamId == null) return this;
+    return RoundRobinTournament(
+      drawOrder: drawOrder,
+      matches: List.unmodifiable([
+        for (final candidate in matches)
+          if (candidate.id == matchId)
+            RoundRobinMatch(id: candidate.id, teamIds: candidate.teamIds)
           else
             candidate,
       ]),

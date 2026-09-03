@@ -9,12 +9,14 @@ class RoundRobinTournamentTab extends StatefulWidget {
     required this.competition,
     required this.teams,
     required this.onConfirmWinner,
+    this.onClearResult,
     super.key,
   });
 
   final Competition competition;
   final List<Team> teams;
   final bool Function(String matchId, String winnerTeamId) onConfirmWinner;
+  final bool Function(String matchId)? onClearResult;
 
   @override
   State<RoundRobinTournamentTab> createState() =>
@@ -53,12 +55,21 @@ class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
               color: Colors.amber.shade100,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Winner: ${names[tournament.winnerTeamId] ?? tournament.winnerTeamId}',
-                  style: Theme.of(context).textTheme.titleLarge,
+                child: Row(
+                  children: [
+                    const Icon(Icons.emoji_events_outlined),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Winner: ${names[tournament.winnerTeamId] ?? tournament.winnerTeamId}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          if (tournament.isComplete) const SizedBox(height: 24),
           Text('Games', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           for (final match in tournament.matches) ...[
@@ -67,6 +78,10 @@ class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
               names: names,
               colors: colors,
               winnerTeamId: match.winnerTeamId,
+              onCorrectResult:
+                  match.winnerTeamId == null || widget.onClearResult == null
+                  ? null
+                  : () => widget.onClearResult!(match.id),
               selectedWinnerId: _selectedWinners[match.id],
               onWinnerSelected: (winnerId) =>
                   setState(() => _selectedWinners[match.id] = winnerId),

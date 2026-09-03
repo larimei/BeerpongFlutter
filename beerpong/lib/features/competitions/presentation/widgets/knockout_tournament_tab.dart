@@ -62,12 +62,21 @@ class _KnockoutTournamentTabState extends State<KnockoutTournamentTab> {
               color: Colors.amber.shade100,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Winner: ${_teamName(tournament.winnerTeamId, names)}',
-                  style: Theme.of(context).textTheme.titleLarge,
+                child: Row(
+                  children: [
+                    const Icon(Icons.emoji_events_outlined),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Winner: ${_teamName(tournament.winnerTeamId, names)}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          if (tournament.isComplete) const SizedBox(height: 24),
           for (final entry in rounds.entries) ...[
             Text(
               _roundName(entry.key, rounds.length),

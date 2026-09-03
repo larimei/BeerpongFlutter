@@ -229,8 +229,9 @@ class _TeamBox extends StatelessWidget {
       avatar: CircleAvatar(backgroundColor: color),
       label: Text(
         teamId == null ? emptyLabel : names[teamId] ?? teamId!,
-        maxLines: 2,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(fontSize: 12),
       ),
       side: BorderSide(
         color: selected ? color : Theme.of(context).colorScheme.outline,

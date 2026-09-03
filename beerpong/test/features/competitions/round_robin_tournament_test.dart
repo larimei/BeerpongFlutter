@@ -38,6 +38,26 @@ void main() {
     );
   });
 
+  test('spreads teams across consecutive round-robin games', () {
+    final tournament = RoundRobinTournament.generate([
+      'red',
+      'blue',
+      'green',
+      'yellow',
+      'purple',
+      'orange',
+    ]);
+
+    for (var index = 1; index < tournament.matches.length; index++) {
+      expect(
+        tournament.matches[index - 1].teamIds.toSet().intersection(
+          tournament.matches[index].teamIds.toSet(),
+        ),
+        isEmpty,
+      );
+    }
+  });
+
   test('updates standings and completes after every game has a winner', () {
     final controller = CompetitionsController(
       InMemoryCompetitionRepository(const [
@@ -76,6 +96,49 @@ void main() {
     ]);
     expect(tournament.isComplete, isTrue);
     expect(tournament.winnerTeamId, 'red');
+  });
+
+  test('clears a confirmed round-robin game', () {
+    final controller = CompetitionsController(
+      InMemoryCompetitionRepository(const [
+        Competition(
+          id: 'league',
+          name: 'League',
+          mode: TournamentMode.roundRobin,
+          color: Colors.blue,
+          teamIds: ['red', 'blue'],
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+    controller.generateRoundRobinTournament('league');
+    final match = controller
+        .competitionById('league')!
+        .roundRobinTournament!
+        .matches
+        .single;
+    controller.confirmRoundRobinMatchWinner(
+      competitionId: 'league',
+      matchId: match.id,
+      winnerTeamId: 'red',
+    );
+
+    expect(
+      controller.clearRoundRobinMatchOutcome(
+        competitionId: 'league',
+        matchId: match.id,
+      ),
+      isTrue,
+    );
+    expect(
+      controller
+          .competitionById('league')!
+          .roundRobinTournament!
+          .matches
+          .single
+          .winnerTeamId,
+      isNull,
+    );
   });
 
   test(
@@ -329,6 +392,11 @@ void main() {
 
     expect(find.text('Winner: Red'), findsOneWidget);
     expect(find.text('1 wins'), findsOneWidget);
+    expect(find.byIcon(Icons.emoji_events_outlined), findsOneWidget);
+    expect(find.text('Correct result'), findsOneWidget);
+    await tester.tap(find.text('Correct result'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm winner'), findsOneWidget);
   });
 
   test('persists generated games, outcomes, and draw order', () {

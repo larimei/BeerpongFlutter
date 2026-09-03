@@ -154,6 +154,22 @@ class CompetitionsController extends ChangeNotifier {
     return true;
   }
 
+  bool clearRoundRobinMatchOutcome({
+    required String competitionId,
+    required String matchId,
+  }) {
+    final competition = _repository.getById(competitionId);
+    final tournament = competition?.roundRobinTournament;
+    if (competition == null || tournament == null) return false;
+    final updatedTournament = tournament.clearOutcome(matchId);
+    if (identical(updatedTournament, tournament)) return false;
+    _repository.update(
+      competition.copyWith(roundRobinTournament: updatedTournament),
+    );
+    _refresh();
+    return true;
+  }
+
   bool clearKnockoutOutcomePath({
     required String competitionId,
     required String matchId,
