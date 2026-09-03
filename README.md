@@ -2,6 +2,8 @@
 
 A small Flutter web app for managing beer pong players, teams, competitions, and games. Mainly created for using with smart phones. It is a recreation of my beerpong app i developed for android.
 
+The project is available under https://larimei.github.io/BeerpongFlutter/
+
 This project is mainly built as a learning project to improve my skills in:
 
 - Flutter and Dart
