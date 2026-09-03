@@ -52,7 +52,6 @@ class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
         children: [
           if (tournament.isComplete)
             Card(
-              color: widget.competition.color,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(

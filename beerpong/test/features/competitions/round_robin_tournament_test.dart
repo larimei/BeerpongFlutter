@@ -423,7 +423,7 @@ void main() {
       tester.widget<Icon>(find.byIcon(Icons.emoji_events_outlined)).color,
       Colors.amber.shade700,
     );
-    expect(tester.widgetList<Card>(find.byType(Card)).first.color, Colors.blue);
+    expect(tester.widgetList<Card>(find.byType(Card)).first.color, isNull);
     expect(find.text('Correct result'), findsOneWidget);
     await tester.tap(find.text('Correct result'));
     await tester.pumpAndSettle();

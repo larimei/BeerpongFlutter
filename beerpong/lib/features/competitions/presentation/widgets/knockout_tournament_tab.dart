@@ -59,7 +59,6 @@ class _KnockoutTournamentTabState extends State<KnockoutTournamentTab> {
         children: [
           if (tournament.isComplete)
             Card(
-              color: widget.competition.color,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
