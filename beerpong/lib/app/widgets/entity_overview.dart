@@ -41,16 +41,29 @@ class EntityGrid extends StatelessWidget {
   final IndexedWidgetBuilder itemBuilder;
 
   @override
-  Widget build(BuildContext context) => GridView.builder(
-    padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      childAspectRatio: 1,
-      crossAxisSpacing: 20,
-      mainAxisSpacing: 20,
-    ),
-    itemCount: itemCount,
-    itemBuilder: itemBuilder,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final crossAxisCount = switch (width) {
+        >= 1500 => 5,
+        >= 1100 => 4,
+        >= 700 => 3,
+        _ => 2,
+      };
+      final double childAspectRatio = width >= 700 ? 1.15 : 1;
+
+      return GridView.builder(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+        ),
+        itemCount: itemCount,
+        itemBuilder: itemBuilder,
+      );
+    },
   );
 }
 

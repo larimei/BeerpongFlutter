@@ -74,29 +74,47 @@ class _RoundRobinTournamentTabState extends State<RoundRobinTournamentTab> {
           if (tournament.isComplete) const SizedBox(height: 24),
           Text('Games', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          for (final match in tournament.matches) ...[
-            TournamentMatchCard(
-              teamIds: match.teamIds,
-              names: names,
-              colors: colors,
-              winnerTeamId: match.winnerTeamId,
-              onCorrectResult:
-                  match.winnerTeamId == null || widget.onClearResult == null
-                  ? null
-                  : () => widget.onClearResult!(match.id),
-              selectedWinnerId: _selectedWinners[match.id],
-              onWinnerSelected: (winnerId) =>
-                  setState(() => _selectedWinners[match.id] = winnerId),
-              onConfirm: () {
-                final winner = _selectedWinners[match.id];
-                if (winner != null &&
-                    widget.onConfirmWinner(match.id, winner)) {
-                  setState(() => _selectedWinners.remove(match.id));
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final useTwoColumns =
+                  constraints.maxWidth >= 900 && tournament.matches.length > 1;
+              final cardWidth = useTwoColumns
+                  ? (constraints.maxWidth - 12) / 2
+                  : constraints.maxWidth;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final match in tournament.matches)
+                    SizedBox(
+                      width: cardWidth,
+                      child: TournamentMatchCard(
+                        teamIds: match.teamIds,
+                        names: names,
+                        colors: colors,
+                        winnerTeamId: match.winnerTeamId,
+                        onCorrectResult:
+                            match.winnerTeamId == null ||
+                                widget.onClearResult == null
+                            ? null
+                            : () => widget.onClearResult!(match.id),
+                        selectedWinnerId: _selectedWinners[match.id],
+                        onWinnerSelected: (winnerId) => setState(
+                          () => _selectedWinners[match.id] = winnerId,
+                        ),
+                        onConfirm: () {
+                          final winner = _selectedWinners[match.id];
+                          if (winner != null &&
+                              widget.onConfirmWinner(match.id, winner)) {
+                            setState(() => _selectedWinners.remove(match.id));
+                          }
+                        },
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 12),
           Text('Standings', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),

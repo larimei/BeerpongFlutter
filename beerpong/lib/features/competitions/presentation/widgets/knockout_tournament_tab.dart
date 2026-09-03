@@ -85,31 +85,48 @@ class _KnockoutTournamentTabState extends State<KnockoutTournamentTab> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            for (final match in entry.value) ...[
-              TournamentMatchCard(
-                teamIds: match.teamIds,
-                names: names,
-                colors: colors,
-                winnerTeamId: match.winnerTeamId,
-                onCorrectResult:
-                    match.isBye || widget.onClearOutcomePath == null
-                    ? null
-                    : () => _clearOutcomePath(context, match.id),
-                isPlayable: match.isPlayable,
-                isBye: match.isBye,
-                selectedWinnerId: _selectedWinners[match.id],
-                onWinnerSelected: (winner) =>
-                    setState(() => _selectedWinners[match.id] = winner),
-                onConfirm: () {
-                  final winner = _selectedWinners[match.id];
-                  if (winner != null &&
-                      widget.onConfirmWinner(match.id, winner)) {
-                    setState(() => _selectedWinners.remove(match.id));
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final useTwoColumns =
+                    constraints.maxWidth >= 900 && entry.value.length > 1;
+                final cardWidth = useTwoColumns
+                    ? (constraints.maxWidth - 12) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (final match in entry.value)
+                      SizedBox(
+                        width: cardWidth,
+                        child: TournamentMatchCard(
+                          teamIds: match.teamIds,
+                          names: names,
+                          colors: colors,
+                          winnerTeamId: match.winnerTeamId,
+                          onCorrectResult:
+                              match.isBye || widget.onClearOutcomePath == null
+                              ? null
+                              : () => _clearOutcomePath(context, match.id),
+                          isPlayable: match.isPlayable,
+                          isBye: match.isBye,
+                          selectedWinnerId: _selectedWinners[match.id],
+                          onWinnerSelected: (winner) => setState(
+                            () => _selectedWinners[match.id] = winner,
+                          ),
+                          onConfirm: () {
+                            final winner = _selectedWinners[match.id];
+                            if (winner != null &&
+                                widget.onConfirmWinner(match.id, winner)) {
+                              setState(() => _selectedWinners.remove(match.id));
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 12),
           ],
         ],
