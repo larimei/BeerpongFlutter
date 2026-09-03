@@ -79,12 +79,13 @@ class SupabaseAppStateStore implements AppStateStore {
   }
 
   @override
-  Future<void> save(AppSnapshot snapshot) =>
-      _client.from('app_snapshots').upsert({
-        'owner_id': _userId,
-        'payload': jsonDecode(snapshot.encode()),
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
+  Future<void> save(AppSnapshot snapshot) async {
+    await _client.from('app_snapshots').upsert({
+      'owner_id': _userId,
+      'payload': jsonDecode(snapshot.encode()),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
 
   @override
   Future<void> clear() =>

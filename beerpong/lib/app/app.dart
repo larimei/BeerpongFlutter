@@ -8,10 +8,14 @@ class BeerpongApp extends StatelessWidget {
     super.key,
     this.snapshot = const AppSnapshot.empty(),
     this.store = const BrowserAppStateStore(),
+    this.onSignOut,
+    this.onOpenLogin,
   });
 
   final AppSnapshot snapshot;
   final AppStateStore store;
+  final Future<void> Function()? onSignOut;
+  final VoidCallback? onOpenLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,12 @@ class BeerpongApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: AppShell(snapshot: snapshot, store: store),
+      home: AppShell(
+        snapshot: snapshot,
+        store: store,
+        onSignOut: onSignOut,
+        onOpenLogin: onOpenLogin,
+      ),
     );
   }
 }

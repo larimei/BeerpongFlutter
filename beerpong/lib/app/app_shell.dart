@@ -19,10 +19,18 @@ import 'widgets/entity_add_form.dart';
 import 'widgets/global_add_overlay.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.snapshot, required this.store});
+  const AppShell({
+    super.key,
+    required this.snapshot,
+    required this.store,
+    this.onSignOut,
+    this.onOpenLogin,
+  });
 
   final AppSnapshot snapshot;
   final AppStateStore store;
+  final Future<void> Function()? onSignOut;
+  final VoidCallback? onOpenLogin;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -106,7 +114,11 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _openSettings() => Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (context) => SettingsPage(onClearLocalData: _clearLocalData),
+      builder: (context) => SettingsPage(
+        onClearLocalData: _clearLocalData,
+        onSignOut: widget.onSignOut,
+        onOpenLogin: widget.onOpenLogin,
+      ),
     ),
   );
 

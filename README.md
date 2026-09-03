@@ -19,7 +19,7 @@ This project is mainly built as a learning project to improve my skills in:
 
 ## Purpose
 
-The main goal of this project is not to build a production-ready beer pong platform, but to learn Flutter and improve my programming workflow by developing the application together with Codex, Agents and Skills by Matt Pocock.
+The main goal of this project is not to build a production-ready beer pong platform, but to learn Flutter and Supabase and improve my programming workflow by developing the application together with Codex, Agents and Skills by Matt Pocock.
 
 ## Running the Project
 

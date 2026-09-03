@@ -4,9 +4,16 @@ import '../app.dart';
 import '../data/app_state_store.dart';
 
 class BootstrapApp extends StatefulWidget {
-  const BootstrapApp({super.key, required this.store});
+  const BootstrapApp({
+    super.key,
+    required this.store,
+    this.onSignOut,
+    this.onOpenLogin,
+  });
 
   final AppStateStore store;
+  final Future<void> Function()? onSignOut;
+  final VoidCallback? onOpenLogin;
 
   @override
   State<BootstrapApp> createState() => _BootstrapAppState();
@@ -25,7 +32,12 @@ class _BootstrapAppState extends State<BootstrapApp> {
             home: Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
-        return BeerpongApp(snapshot: snapshot.data!, store: widget.store);
+        return BeerpongApp(
+          snapshot: snapshot.data!,
+          store: widget.store,
+          onSignOut: widget.onSignOut,
+          onOpenLogin: widget.onOpenLogin,
+        );
       },
     );
   }

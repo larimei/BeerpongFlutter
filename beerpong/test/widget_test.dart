@@ -1,8 +1,66 @@
 import 'package:beerpong/app/app.dart';
+import 'package:beerpong/app/presentation/auth_gate.dart';
+import 'package:beerpong/app/presentation/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('settings lets guests return to login', (tester) async {
+    var openedLogin = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsPage(
+          onClearLocalData: () async {},
+          onOpenLogin: () => openedLogin = true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Sign in'));
+
+    expect(openedLogin, isTrue);
+    expect(find.text('Sign out'), findsNothing);
+  });
+
+  testWidgets('settings offers sign out for authenticated sessions', (
+    tester,
+  ) async {
+    var signedOut = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsPage(
+          onClearLocalData: () async {},
+          onSignOut: () async => signedOut = true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Sign out'));
+
+    expect(signedOut, isTrue);
+  });
+
+  testWidgets('guest mode warns that browser data can be lost', (tester) async {
+    var startedGuestMode = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AuthPage(onUseGuestMode: () => startedGuestMode = true),
+      ),
+    );
+
+    await tester.tap(find.text('Continue without an account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Continue as guest?'), findsOneWidget);
+    expect(find.textContaining('only in this browser'), findsOneWidget);
+    expect(find.textContaining('switch browsers'), findsOneWidget);
+
+    await tester.tap(find.text('Continue anyway'));
+    await tester.pumpAndSettle();
+
+    expect(startedGuestMode, isTrue);
+  });
+
   testWidgets('navigates between the primary pages', (tester) async {
     await tester.pumpWidget(const BeerpongApp());
 

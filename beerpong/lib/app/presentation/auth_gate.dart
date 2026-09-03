@@ -6,8 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/app_state_store.dart';
 import 'bootstrap_app.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _useGuestMode = false;
 
   @override
   Widget build(BuildContext context) => StreamBuilder<AuthState>(
@@ -20,18 +27,30 @@ class AuthGate extends StatelessWidget {
       if (snapshot.data?.session != null) {
         return BootstrapApp(
           store: SupabaseAppStateStore(Supabase.instance.client),
+          onSignOut: Supabase.instance.client.auth.signOut,
         );
       }
-      return const MaterialApp(
+      if (_useGuestMode) {
+        return BootstrapApp(
+          store: const BrowserAppStateStore(),
+          onOpenLogin: () => setState(() => _useGuestMode = false),
+        );
+      }
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: AuthPage(),
+        home: AuthPage(
+          onUseGuestMode: () => setState(() => _useGuestMode = true),
+        ),
       );
     },
   );
 }
 
 class AuthPage extends StatefulWidget {
-  const AuthPage({super.key});
+  const AuthPage({super.key, required this.onUseGuestMode});
+
+  final VoidCallback onUseGuestMode;
+
   @override
   State<AuthPage> createState() => _AuthPageState();
 }
@@ -71,7 +90,7 @@ class _AuthPageState extends State<AuthPage> {
         if (!mounted) return;
         setState(() {
           _register = false;
-          _error = 'Konto erstellt. Bitte jetzt anmelden.';
+          _error = 'Account created. Please sign in.';
         });
       } else {
         await Supabase.instance.client.auth.signInWithPassword(
@@ -89,14 +108,39 @@ class _AuthPageState extends State<AuthPage> {
           () => _error =
               error.details?.toString() ??
               error.reasonPhrase ??
-              'Registrierung fehlgeschlagen.',
+              'Registration failed.',
         );
       }
     } catch (_) {
-      if (mounted) setState(() => _error = 'Anfrage fehlgeschlagen.');
+      if (mounted) setState(() => _error = 'Request failed.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _confirmGuestMode() async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Continue as guest?'),
+        content: const Text(
+          'Your data is stored only in this browser. If you switch browsers '
+          'or clear this browser\'s website data, it will be lost. Sign in to '
+          'store your data safely in an account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continue anyway'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted) widget.onUseGuestMode();
   }
 
   @override
@@ -110,7 +154,7 @@ class _AuthPageState extends State<AuthPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _register ? 'Konto erstellen' : 'Anmelden',
+                _register ? 'Create account' : 'Sign in',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 20),
@@ -118,7 +162,7 @@ class _AuthPageState extends State<AuthPage> {
                 TextField(
                   controller: _invitation,
                   decoration: const InputDecoration(
-                    labelText: 'Einladungscode',
+                    labelText: 'Invitation code',
                   ),
                 ),
               TextField(
@@ -143,7 +187,7 @@ class _AuthPageState extends State<AuthPage> {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: _busy ? null : _submit,
-                child: Text(_register ? 'Registrieren' : 'Anmelden'),
+                child: Text(_register ? 'Register' : 'Sign in'),
               ),
               TextButton(
                 onPressed: _busy
@@ -154,9 +198,13 @@ class _AuthPageState extends State<AuthPage> {
                       }),
                 child: Text(
                   _register
-                      ? 'Ich habe bereits ein Konto'
-                      : 'Konto mit Einladung erstellen',
+                      ? 'I already have an account'
+                      : 'Create an account with an invitation',
                 ),
+              ),
+              TextButton(
+                onPressed: _busy ? null : _confirmGuestMode,
+                child: const Text('Continue without an account'),
               ),
             ],
           ),
